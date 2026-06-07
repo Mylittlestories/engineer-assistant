@@ -5,6 +5,10 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    export default defineConfig({
+  base: '/engineer-assistant/',
+  plugins: [react()],
+});
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
