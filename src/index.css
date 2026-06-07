@@ -1,0 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-brand-bg: #071524;
+  --color-panel-bg: #0e2035;
+  --color-sidebar-bg: #0a192a;
+  --color-card-bg: #142e4c;
+  --color-accent-cyan: #38bdf8;
+  --color-accent-cyan-dark: #0284c7;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Custom subtle scrollbar style for spreadsheet and tabs layout */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #071524;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.25);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.55);
+}
+
+body {
+  background-color: #071524;
+  color: #f1f5f9;
+}
+
+/* ========================================================
+   STUNNING DAYLIGHT CIEL MARINE THEME (ECDIS-STUDIO STYLING)
+   ======================================================== */
+.theme-ciel, .theme-ciel body {
+  background-color: #f0f9ff !important;
+  color: #0f172a !important;
+}
+
+/* Ensure body element takes the background color of Ciel marine */
+body:has(.theme-ciel) {
+  background-color: #f0f9ff !important;
+}
+
+/* redefine Tailwind theme variable fallback for elements that use them */
+.theme-ciel {
+  --color-brand-bg: #f0f9ff !important;
+  --color-panel-bg: #ffffff !important;
+  --color-sidebar-bg: #f0f9ff !important;
+  --color-card-bg: #ffffff !important;
+  --color-accent-cyan: #0284c7 !important;
+  --color-accent-cyan-dark: #0369a1 !important;
+}
+
+/* -------------------------------------------------------------
+   CARD & GENERAL BACKGROUND MAPS
+   Maps deep dark backgrounds to highly legible light-ciel elements
+   ------------------------------------------------------------- */
+.theme-ciel .bg-\[\#0a192a\],
+.theme-ciel .bg-\[\#0b1424\],
+.theme-ciel .bg-\[\#0c1524\],
+.theme-ciel .bg-\[\#0d1425\],
+.theme-ciel .bg-\[\#0e2035\],
+.theme-ciel .bg-\[\#142e4c\],
+.theme-ciel .bg-\[\#090f1d\],
+.theme-ciel .bg-slate-900,
+.theme-ciel .bg-slate-850,
+.theme-ciel .bg-slate-800,
+.theme-ciel .bg-\[\#111827\] {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-color: #7dd3fc !important;
+  box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.05), 0 2px 4px -1px rgba(2, 132, 199, 0.03) !important;
+}
+
+/* -------------------------------------------------------------
+   INNER WELLS, CHAT ITEMS, CODE BLOCKS & PRESETS
+   Maps near-black backgrounds to beautiful Alice / Sky Blue wells
+   ------------------------------------------------------------- */
+.theme-ciel .bg-\[\#010610\],
+.theme-ciel .bg-\[\#040a14\],
+.theme-ciel .bg-\[\#050a14\],
+.theme-ciel .bg-\[\#071324\],
+.theme-ciel .bg-\[\#11223b\],
+.theme-ciel .bg-slate-950,
+.theme-ciel .bg-slate-950\/40,
+.theme-ciel .bg-slate-950\/60,
+.theme-ciel .bg-slate-900\/60,
+.theme-ciel .bg-slate-900\/50,
+.theme-ciel .bg-slate-900\/20,
+.theme-ciel .bg-\[\#111827\]\/40,
+.theme-ciel .bg-slate-950\/20,
+.theme-ciel .bg-\[\#0e121a\] {
+  background-color: #f0f9ff !important;
+  color: #0369a1 !important;
+  border-color: #bae6fd !important;
+}
+
+/* Specific text inputs or system messages overrides inside AI box or overhauls tab */
+.theme-ciel .bg-sky-950\/25,
+.theme-ciel .bg-sky-950\/20,
+.theme-ciel .bg-emerald-950,
+.theme-ciel .bg-amber-950,
+.theme-ciel .bg-rose-950,
+.theme-ciel .bg-red-950 {
+  background-color: #e0f2fe !important;
+  color: #0c4a6e !important;
+}
+
+/* -------------------------------------------------------------
+   BORDER OVERRIDES
+   Upgrades dark borders to glowing sea-breeze cyan/sky outlines
+   ------------------------------------------------------------- */
+.theme-ciel .border-slate-800,
+.theme-ciel .border-slate-850,
+.theme-ciel .border-slate-700,
+.theme-ciel .border-slate-600,
+.theme-ciel .border-sky-500\/10,
+.theme-ciel .border-sky-500\/20,
+.theme-ciel .border-sky-500\/25,
+.theme-ciel .border-sky-500\/30 {
+  border-color: #bae6fd !important;
+}
+
+/* -------------------------------------------------------------
+   TEXT READABILITY AND CONTRAST ENHANCEMENTS
+   Converts hard-to-read dark theme texts into rich ocean slate
+   ------------------------------------------------------------- */
+.theme-ciel .text-slate-400,
+.theme-ciel .text-slate-450,
+.theme-ciel .text-sky-450,
+.theme-ciel .text-slate-350,
+.theme-ciel .text-slate-500 {
+  color: #0369a1 !important;
+}
+
+.theme-ciel .text-slate-350,
+.theme-ciel .text-slate-300,
+.theme-ciel .text-slate-200,
+.theme-ciel .text-slate-100 {
+  color: #1e293b !important;
+}
+
+.theme-ciel .text-white {
+  color: #0f172a !important;
+}
+
+.theme-ciel .text-sky-400 {
+  color: #0284c7 !important;
+}
+
+/* Keep accent highlights highly visible */
+.theme-ciel .text-[#dfb15b],
+.theme-ciel .text-[#cca45c] {
+  color: #1e40af !important; /* Elegant marine blue instead of gold for clarity */
+}
+
+/* -------------------------------------------------------------
+   HEADER & NAVIGATION BUTTONS
+   Maintains professional dark command panel header styled as ECDIS
+   ------------------------------------------------------------- */
+.theme-ciel header {
+  background-color: #072244 !important;
+  color: #ffffff !important;
+  border-bottom: 3px solid #0284c7 !important;
+}
+
+.theme-ciel header * {
+  color: #ffffff !important;
+}
+
+.theme-ciel header .text-sky-400 {
+  color: #38bdf8 !important;
+}
+
+/* Navigation tabs & tab switcher row container */
+.theme-ciel nav {
+  background-color: #ffffff !important;
+  border-bottom: 2px solid #bae6fd !important;
+}
+
+.theme-ciel nav button {
+  color: #475569 !important;
+}
+
+.theme-ciel nav button.text-sky-400,
+.theme-ciel nav button.bg-slate-900 {
+  color: #0284c7 !important;
+  background-color: #e0f2fe !important;
+  border-bottom-color: #0284c7 !important;
+}
+
+/* -------------------------------------------------------------
+   FORMS, CONTROLS, SELECTS & BUTTONS
+   ------------------------------------------------------------- */
+.theme-ciel input[type="text"],
+.theme-ciel input[type="number"],
+.theme-ciel textarea,
+.theme-ciel select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #bae6fd !important;
+}
+
+.theme-ciel input::placeholder {
+  color: #94a3b8 !important;
+}
+
+.theme-ciel button.bg-\[\#cca45c\],
+.theme-ciel button.bg-\[\#11223b\],
+.theme-ciel .bg-sky-500 {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+}
+
+.theme-ciel button.bg-\[\#cca45c\]:hover,
+.theme-ciel .bg-sky-500:hover {
+  background-color: #0369a1 !important;
+}
+
+/* Table rows styling specifically for marine lists */
+.theme-ciel tr:hover {
+  background-color: rgba(224, 242, 254, 0.4) !important;
+}
+
+.theme-ciel tbody tr {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.theme-ciel tbody tr:nth-child(even) {
+  background-color: #f8fafc !important;
+}
+

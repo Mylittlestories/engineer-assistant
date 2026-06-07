@@ -1,0 +1,6 @@
+{
+  "name": "DRV Engineer Assistant",
+  "description": "Comprehensive offline-ready shipboard tool with full 2-stroke/4-stroke schematics, MARPOL compliance, Ballast Water Treatment systems (BWTS), and AI Chief Advisor helper.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
