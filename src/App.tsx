@@ -15,6 +15,7 @@ import {
   Settings,
   X
 } from "lucide-react";
+import QuickReference from "./components/QuickReference";
 
 export default function App() {
   const [records, setRecords] = useState<TroubleshootingRecord[]>([]);
@@ -176,6 +177,11 @@ export default function App() {
                 language={language}
                 offlineRecords={records}
               />
+            </div>
+
+            {/* Quick Reference */}
+            <div className="mt-6">
+              <QuickReference />
             </div>
           </div>
         </div>
