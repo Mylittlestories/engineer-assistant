@@ -21,7 +21,9 @@ import {
   Check,
   BookMarked,
   FolderMinus,
-  Briefcase
+  Briefcase,
+  Settings,
+  KeyRound
 } from "lucide-react";
 import { ChatMessage, TroubleshootingRecord, SavedQaItem } from "../types";
 import { uiTranslations } from "../translations";
@@ -30,9 +32,10 @@ interface AiAssistantProps {
   selectedRecord: TroubleshootingRecord | null;
   onClearSelectedRecord: () => void;
   language?: "EN" | "GR";
+  offlineRecords?: TroubleshootingRecord[];
 }
 
-export default function AiAssistant({ selectedRecord, onClearSelectedRecord, language = "EN" }: AiAssistantProps) {
+export default function AiAssistant({ selectedRecord, onClearSelectedRecord, language = "EN", offlineRecords = [] }: AiAssistantProps) {
   const t = uiTranslations[language];
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -52,6 +55,70 @@ export default function AiAssistant({ selectedRecord, onClearSelectedRecord, lan
   const [customAnswer, setCustomAnswer] = useState("");
   const [customTopic, setCustomTopic] = useState("");
   const [expandedSavedId, setExpandedSavedId] = useState<string | null>(null);
+
+  // Online AI settings state. API key is saved by the local Node/Electron backend, not in browser localStorage.
+  const [showAiSettings, setShowAiSettings] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [aiModelInput, setAiModelInput] = useState("gemini-2.5-flash");
+  const [aiConfigured, setAiConfigured] = useState(false);
+  const [apiKeyPreview, setApiKeyPreview] = useState("");
+  const [settingsMessage, setSettingsMessage] = useState("");
+  const [autoLearnEnabled, setAutoLearnEnabled] = useState(() => {
+    try {
+      return localStorage.getItem("marine_ai_auto_learn") !== "false";
+    } catch {
+      return true;
+    }
+  });
+
+
+  // Load AI configuration status from the local backend.
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await fetch("/api/settings/status");
+        if (!response.ok) return;
+        const data = await response.json();
+        setAiConfigured(Boolean(data.configured));
+        setApiKeyPreview(data.keyPreview || "");
+        setAiModelInput(data.model || "gemini-2.5-flash");
+      } catch (e) {
+        console.error("Failed to load AI settings", e);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("marine_ai_auto_learn", autoLearnEnabled ? "true" : "false");
+    } catch (e) {
+      console.error("Failed to save adaptive memory setting", e);
+    }
+  }, [autoLearnEnabled]);
+
+  const handleSaveAiSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsMessage(language === "EN" ? "Saving settings..." : "Αποθήκευση ρυθμίσεων...");
+    try {
+      const response = await fetch("/api/settings/api-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: apiKeyInput, model: aiModelInput })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save API key");
+      }
+      setAiConfigured(true);
+      setApiKeyPreview(data.keyPreview || "configured");
+      setAiModelInput(data.model || aiModelInput);
+      setApiKeyInput("");
+      setSettingsMessage(language === "EN" ? "AI key saved. Online assistant is ready." : "Το κλειδί AI αποθηκεύτηκε.");
+    } catch (err: any) {
+      setSettingsMessage(err.message || "Failed to save settings");
+    }
+  };
 
   // Suggested shipboard Q&A prompt presets
   const promptPresets = [
@@ -89,6 +156,77 @@ export default function AiAssistant({ selectedRecord, onClearSelectedRecord, lan
     } catch (e) {
       console.error("Failed to write saved Q&As to localStorage", e);
     }
+  };
+
+  const tokenize = (value: string) => {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9α-ωάέήίόύώϊϋΐΰ%°.-]+/gi, " ")
+      .split(/\s+/)
+      .filter(token => token.length > 2);
+  };
+
+  const scoreText = (queryTokens: string[], text: string) => {
+    const haystack = text.toLowerCase();
+    return queryTokens.reduce((score, token) => score + (haystack.includes(token) ? 1 : 0), 0);
+  };
+
+  const buildOfflineAnswer = (query: string) => {
+    const queryTokens = tokenize(query);
+    if (queryTokens.length === 0 && !selectedRecord) return null;
+
+    const memoryMatches = savedLessons
+      .map(item => ({
+        item,
+        score: scoreText(queryTokens, `${item.topic || ""} ${item.question} ${item.answer}`)
+      }))
+      .filter(entry => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+
+    const recordPool = selectedRecord
+      ? [selectedRecord, ...offlineRecords.filter(record => record.id !== selectedRecord.id)]
+      : offlineRecords;
+
+    const recordMatches = recordPool
+      .map(record => ({
+        record,
+        score: selectedRecord?.id === record.id
+          ? Math.max(3, scoreText(queryTokens, `${record.component} ${record.faultSymptom}`))
+          : scoreText(queryTokens, `${record.category} ${record.makeModel} ${record.component} ${record.faultSymptom} ${record.possibleCauses.join(" ")} ${record.troubleshootingSteps.join(" ")} ${record.safetyPrecautions.join(" ")}`)
+      }))
+      .filter(entry => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4);
+
+    if (memoryMatches.length === 0 && recordMatches.length === 0) {
+      return `### ⚓ Offline Mode Active\n\nI cannot reach online AI and I did not find a close match in the local learned memory.\n\n**Immediate safe action:**\n- Slow down and stabilize the plant if conditions are abnormal.\n- Inform the bridge/chief engineer.\n- Apply **LOTO** and verify **zero energy state** before any hands-on inspection.\n- Check the vessel-specific maker manual, alarm list, PMS history, and latest trend data.\n\n**To improve offline answers next time:** when internet is available, ask the AI and keep **Adaptive Memory** enabled, or manually add a card in the Offline Lessons Vault.`;
+    }
+
+    const learnedSection = memoryMatches.length > 0
+      ? `\n\n## Learned From Previous AI/Engineer Cases\n${memoryMatches.map(({ item }, index) => `\n### ${index + 1}. ${item.topic || "Saved Lesson"}: ${item.question}\n${item.answer.slice(0, 1600)}${item.answer.length > 1600 ? "\n\n_Trimmed offline memory excerpt._" : ""}`).join("\n")}`
+      : "";
+
+    const recordsSection = recordMatches.length > 0
+      ? `\n\n## Matching Offline Troubleshooting Records\n${recordMatches.map(({ record }, index) => `\n### ${index + 1}. ${record.makeModel} — ${record.component}\n**Symptom:** ${record.faultSymptom}\n\n**Likely causes:**\n${record.possibleCauses.map(cause => `- ${cause}`).join("\n")}\n\n**Checklist:**\n${record.troubleshootingSteps.map((step, stepIndex) => `${stepIndex + 1}. ${step}`).join("\n")}\n\n**Safety:**\n${record.safetyPrecautions.map(item => `- **WARNING:** ${item}`).join("\n")}`).join("\n")}`
+      : "";
+
+    return `### ⚓ Offline Engineering Advisor\n\nOnline AI is unavailable or disabled, so I am answering from the shipboard offline database and the local learned memory.\n\n## Immediate Safety Discipline\n- Notify bridge/chief engineer if the fault affects propulsion, power generation, steering, boiler, fuel, bilge, fire, or MARPOL equipment.\n- Reduce load only in coordination with bridge/operations.\n- Apply **LOTO**, verify **zero pressure/zero energy**, and beware of hot surfaces, stored pressure, and high-pressure fuel injection injuries.\n- Do not rely on generic limits: verify exact alarm limits, clearances, torques, and timings from the vessel-specific maker manual.\n${learnedSection}${recordsSection}\n\n## Offline Confidence Note\nThis is a local best-match answer. If the situation is safety-critical or does not match the symptoms, stop, preserve evidence/trends, and escalate to the chief engineer, superintendent, or OEM.`;
+  };
+
+  const addLearnedLesson = (question: string, answer: string, topic?: string) => {
+    if (!autoLearnEnabled || !question.trim() || !answer.trim()) return;
+    if (savedLessons.some(item => item.question === question || item.answer === answer)) return;
+
+    const newItem: SavedQaItem = {
+      id: `learned-${Date.now()}`,
+      question,
+      answer,
+      timestamp: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      topic: topic || selectedRecord?.component || (language === "EN" ? "Adaptive AI Memory" : "Μνήμη AI")
+    };
+
+    saveLessonsToStorage([newItem, ...savedLessons].slice(0, 300));
   };
 
   // Auto-scroll chat to bottom on new messages
@@ -166,15 +304,22 @@ export default function AiAssistant({ selectedRecord, onClearSelectedRecord, lan
       }
 
       const data = await response.json();
+      const rawText = data.text || "I was unable to analyze this symptom. Please crossreference with offline ship manuals limit values.";
+      const keyMissing = typeof rawText === "string" && (rawText.includes("AI Key Not Configured") || rawText.includes("API Key Unconfigured"));
+      const offlineText = keyMissing ? buildOfflineAnswer(trimmedText) : null;
+      const finalText = offlineText || rawText;
       
       const assistantMsg: ChatMessage = {
         id: `assist-${Date.now()}`,
         sender: "assistant",
-        text: data.text || "I was unable to analyze this symptom. Please crossreference with offline ship manuals limit values.",
+        text: finalText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
       setMessages(prev => [...prev, assistantMsg]);
+      if (!keyMissing && aiConfigured) {
+        addLearnedLesson(trimmedText, finalText, selectedRecord?.component);
+      }
 
     } catch (err: any) {
       console.error("AI request failure: ", err);
@@ -289,6 +434,80 @@ export default function AiAssistant({ selectedRecord, onClearSelectedRecord, lan
   return (
     <div className="flex flex-col h-full bg-[#0d1425] border border-slate-800 rounded-xl shadow-xl overflow-hidden shrink-0" id="ai-cabinet">
       
+      {showAiSettings && (
+        <div className="absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleSaveAiSettings} className="w-full max-w-lg bg-[#0b1424] border border-[#cca45c]/40 rounded-xl shadow-2xl p-5 flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-[#dfb15b]" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">{language === "EN" ? "Online AI Configuration" : "Ρύθμιση Online AI"}</h3>
+                  <p className="text-[10px] text-slate-400 font-mono">{aiConfigured ? `Configured: ${apiKeyPreview}` : (language === "EN" ? "Gemini API key required for live AI help" : "Απαιτείται Gemini API key")}</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowAiSettings(false)} className="text-slate-500 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3 text-[11px] text-slate-300 leading-relaxed">
+              {language === "EN"
+                ? "The desktop app works offline for tables, calculators, and saved lessons. For online engineering AI answers, paste a Gemini API key. It is stored locally on this computer by the backend configuration file."
+                : "Η εφαρμογή λειτουργεί offline για πίνακες, υπολογισμούς και αποθηκευμένα μαθήματα. Για online AI απαντήσεις, εισάγετε Gemini API key."}
+            </div>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-400">Gemini API Key</span>
+              <input
+                type="password"
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                placeholder="Paste API key here"
+                className="bg-slate-900 border border-slate-700 rounded px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-[#cca45c]/70"
+                autoComplete="off"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-mono font-bold uppercase text-slate-400">AI Model</span>
+              <input
+                type="text"
+                value={aiModelInput}
+                onChange={(e) => setAiModelInput(e.target.value)}
+                className="bg-slate-900 border border-slate-700 rounded px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-[#cca45c]/70"
+              />
+            </label>
+
+            <label className="flex items-start gap-2 rounded-lg border border-slate-800 bg-slate-950/40 p-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoLearnEnabled}
+                onChange={(e) => setAutoLearnEnabled(e.target.checked)}
+                className="mt-0.5 accent-[#cca45c]"
+              />
+              <span className="text-[11px] text-slate-300 leading-relaxed">
+                <b className="text-[#dfb15b]">{language === "EN" ? "Adaptive Memory" : "Προσαρμοστική Μνήμη"}</b> — {language === "EN"
+                  ? "automatically save successful AI answers into the Offline Lessons Vault so the app can answer similar cases at sea without internet."
+                  : "αποθηκεύει αυτόματα επιτυχημένες απαντήσεις AI για offline χρήση."}
+              </span>
+            </label>
+
+            {settingsMessage && (
+              <p className={`text-[11px] font-mono ${settingsMessage.toLowerCase().includes("failed") || settingsMessage.toLowerCase().includes("required") ? "text-red-300" : "text-emerald-300"}`}>{settingsMessage}</p>
+            )}
+
+            <div className="flex gap-2 justify-end">
+              <button type="button" onClick={() => setShowAiSettings(false)} className="px-3 py-2 text-[11px] font-bold uppercase rounded bg-slate-900 text-slate-300 border border-slate-700 hover:text-white">
+                {language === "EN" ? "Close" : "Κλείσιμο"}
+              </button>
+              <button type="submit" className="px-3 py-2 text-[11px] font-bold uppercase rounded bg-[#cca45c] text-slate-950 hover:bg-[#dfb15b]">
+                {language === "EN" ? "Save AI Key" : "Αποθήκευση"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* Tab Switcher Panel & Main Control */}
       <div className="p-3 bg-[#111827] border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3" id="ai-cabinet-header">
         
@@ -321,6 +540,19 @@ export default function AiAssistant({ selectedRecord, onClearSelectedRecord, lan
           >
             <Bot className="w-3.5 h-3.5" />
             <span>{t.tabActiveChat}</span>
+          </button>
+
+          <button
+            onClick={() => setShowAiSettings(true)}
+            className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded transition-all cursor-pointer border ${
+              aiConfigured
+                ? "bg-emerald-950/30 text-emerald-300 border-emerald-500/30"
+                : "bg-red-950/30 text-red-300 border-red-500/30 hover:text-red-200"
+            }`}
+            title={language === "EN" ? "Configure Gemini API key for online AI" : "Ρύθμιση κλειδιού Gemini API"}
+          >
+            <Settings className="w-3.5 h-3.5" />
+            <span>{language === "EN" ? "AI Settings" : "Ρυθμίσεις AI"}</span>
           </button>
 
           <button
@@ -714,7 +946,7 @@ export default function AiAssistant({ selectedRecord, onClearSelectedRecord, lan
             </button>
           </div>
           <div className="mt-2 text-[9px] text-slate-600 text-center font-mono uppercase tracking-wide" id="engine-advisory-clause">
-            <span>* SECURITY ADVISORY: COUPLING ME-C V4.2 / COMPLIANT WITH SOLAS INTERFACES</span>
+            <span>* OFFLINE READY: LOCAL DATABASE + ADAPTIVE MEMORY. ONLINE AI ONLY WHEN CONNECTION/API KEY IS AVAILABLE.</span>
           </div>
         </div>
       )}

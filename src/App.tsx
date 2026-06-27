@@ -452,6 +452,7 @@ export default function App() {
                 selectedRecord={selectedRecordForAi}
                 onClearSelectedRecord={handleClearSelectedRecordForAi}
                 language={language}
+                offlineRecords={records}
               />
             </div>
           )}
@@ -494,6 +495,7 @@ export default function App() {
                 selectedRecord={selectedRecordForAi}
                 onClearSelectedRecord={handleClearSelectedRecordForAi}
                 language={language}
+                offlineRecords={records}
               />
             </div>
           </div>

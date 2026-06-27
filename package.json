@@ -1,9 +1,9 @@
 {
-  "name": "react-example",
+  "name": "engineer-assistant",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
-  "main": "dist/server.cjs",
+  "main": "electron/main.cjs",
   "bin": "dist/server.cjs",
   "scripts": {
     "dev": "tsx server.ts",
@@ -12,7 +12,11 @@
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "electron:dev": "npm run build && electron electron/main.cjs",
+    "dist:win": "npm run build && electron-builder --win nsis portable",
+    "dist:linux": "npm run build && electron-builder --linux AppImage deb",
+    "dist:mac": "npm run build && electron-builder --mac dmg"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -36,21 +40,60 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3"
-  },
-  "pkg": {
-    "assets": [
-      "dist/**/*"
-    ],
-    "targets": [
-      "node18-win-x64",
-      "node18-linux-x64"
-    ]
+    "vite": "^6.2.3",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
   },
   "allowScripts": {
     "@google/genai@2.7.0": true,
     "esbuild@0.25.12": true,
     "esbuild@0.28.0": true,
     "protobufjs@7.6.2": true
+  },
+  "productName": "Engineer Assistant",
+  "description": "Professional desktop AI assistant for marine engineering troubleshooting, calculations, and offline knowledge.",
+  "author": "Mylittlestories",
+  "build": {
+    "appId": "com.mylittlestories.engineerassistant",
+    "productName": "Engineer Assistant",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dist",
+        "to": "dist"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "--."
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Education"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.education"
+    }
   }
 }

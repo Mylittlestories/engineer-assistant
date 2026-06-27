@@ -159,8 +159,8 @@ body:has(.theme-ciel) {
 }
 
 /* Keep accent highlights highly visible */
-.theme-ciel .text-[#dfb15b],
-.theme-ciel .text-[#cca45c] {
+.theme-ciel .text-\[\#dfb15b\],
+.theme-ciel .text-\[\#cca45c\] {
   color: #1e40af !important; /* Elegant marine blue instead of gold for clarity */
 }
 
