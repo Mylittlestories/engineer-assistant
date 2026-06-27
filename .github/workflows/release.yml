@@ -35,7 +35,7 @@ jobs:
       - name: Create GitHub Release + Upload EXEs
         uses: softprops/action-gh-release@v2
         with:
-          token: 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
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref_name }}
           name: Engineer Assistant ${{ github.ref_name }}
           draft: false
