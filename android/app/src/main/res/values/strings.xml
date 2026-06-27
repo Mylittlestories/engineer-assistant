@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Engineer Assistant</string>
+    <string name="title_activity_main">Engineer Assistant</string>
+    <string name="package_name">com.mylittlestories.engineerassistant</string>
+    <string name="custom_url_scheme">com.mylittlestories.engineerassistant</string>
+</resources>

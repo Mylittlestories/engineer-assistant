@@ -135,3 +135,50 @@ Recommended production path:
 4. Build a signed `.aab` in Android Studio for Google Play or a signed `.apk` for private distribution.
 
 The already published Windows desktop release remains separate. PWA/Android preparation is published under its own version tag.
+
+## Android native alpha release
+
+Version 1.2.0 adds the generated Capacitor Android project and a GitHub Actions Android build job.
+
+### Android debug APK from GitHub Releases
+
+On version tags, GitHub Actions now builds and attaches a debug APK named like:
+
+```txt
+Engineer-Assistant-Android-v1.2.0-debug.apk
+```
+
+This APK is for shipboard/private testing, not Google Play production. For production release, build a signed release APK/AAB in Android Studio with your own keystore.
+
+### Build Android locally
+
+Requirements:
+
+- Android Studio
+- Android SDK
+- Java 17
+
+Commands:
+
+```bash
+npm install
+npm run android:sync
+cd android
+./gradlew assembleDebug
+```
+
+The debug APK will be created under:
+
+```txt
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Production Android note
+
+Before Google Play publication, still needed:
+
+- signed release keystore
+- app icon/splash polish
+- privacy policy
+- final mobile UI testing on real phones/tablets
+- release `.aab` build
