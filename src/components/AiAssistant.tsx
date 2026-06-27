@@ -1,955 +1,175 @@
-import React, { useState, useEffect, useRef } from "react";
-import Markdown from "react-markdown";
-import { 
-  Bot, 
-  Send, 
-  Trash2, 
-  Sparkles, 
-  HelpCircle,
-  Clock,
-  ShieldCheck,
-  AlertTriangle,
-  Loader2,
-  X,
-  Bookmark,
-  BookmarkCheck,
-  Search,
-  BookOpen,
-  PlusCircle,
-  FileCheck,
-  Download,
-  Check,
-  BookMarked,
-  FolderMinus,
-  Briefcase,
-  Settings,
-  KeyRound
-} from "lucide-react";
-import { ChatMessage, TroubleshootingRecord, SavedQaItem } from "../types";
-import { uiTranslations } from "../translations";
+import React, { useState, useRef, useEffect } from "react";
+import { Bot, Send, Trash2, Bookmark, Settings, X } from "lucide-react";
 
 interface AiAssistantProps {
-  selectedRecord: TroubleshootingRecord | null;
+  selectedRecord: any;
   onClearSelectedRecord: () => void;
-  language?: "EN" | "GR";
-  offlineRecords?: TroubleshootingRecord[];
+  language: "EN" | "GR";
+  offlineRecords: any[];
 }
 
-export default function AiAssistant({ selectedRecord, onClearSelectedRecord, language = "EN", offlineRecords = [] }: AiAssistantProps) {
-  const t = uiTranslations[language];
-
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState("");
+export default function AiAssistant({ selectedRecord, onClearSelectedRecord, language, offlineRecords }: AiAssistantProps) {
+  const [messages, setMessages] = useState<any[]>([
+    {
+      id: "welcome",
+      sender: "assistant",
+      text: "Hello, I'm your **Chief Engineer AI**. How can I assist you with marine engineering today?",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+  ]);
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Saved Offline Lessons/Q&A state
-  const [savedLessons, setSavedLessons] = useState<SavedQaItem[]>([]);
-  const [activeSubTab, setActiveSubTab] = useState<"chat" | "vault">("chat");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [saveSuccessId, setSaveSuccessId] = useState<string | null>(null);
-
-  // Manual draft states
-  const [showCustomForm, setShowCustomForm] = useState(false);
-  const [customQuestion, setCustomQuestion] = useState("");
-  const [customAnswer, setCustomAnswer] = useState("");
-  const [customTopic, setCustomTopic] = useState("");
-  const [expandedSavedId, setExpandedSavedId] = useState<string | null>(null);
-
-  // Online AI settings state. API key is saved by the local Node/Electron backend, not in browser localStorage.
-  const [showAiSettings, setShowAiSettings] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState("");
-  const [aiModelInput, setAiModelInput] = useState("gemini-2.5-flash");
-  const [aiConfigured, setAiConfigured] = useState(false);
-  const [apiKeyPreview, setApiKeyPreview] = useState("");
-  const [settingsMessage, setSettingsMessage] = useState("");
-  const [autoLearnEnabled, setAutoLearnEnabled] = useState(() => {
-    try {
-      return localStorage.getItem("marine_ai_auto_learn") !== "false";
-    } catch {
-      return true;
-    }
-  });
-
-
-  // Load AI configuration status from the local backend.
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const response = await fetch("/api/settings/status");
-        if (!response.ok) return;
-        const data = await response.json();
-        setAiConfigured(Boolean(data.configured));
-        setApiKeyPreview(data.keyPreview || "");
-        setAiModelInput(data.model || "gemini-2.5-flash");
-      } catch (e) {
-        console.error("Failed to load AI settings", e);
-      }
-    };
-    loadSettings();
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("marine_ai_auto_learn", autoLearnEnabled ? "true" : "false");
-    } catch (e) {
-      console.error("Failed to save adaptive memory setting", e);
-    }
-  }, [autoLearnEnabled]);
-
-  const handleSaveAiSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSettingsMessage(language === "EN" ? "Saving settings..." : "Αποθήκευση ρυθμίσεων...");
-    try {
-      const response = await fetch("/api/settings/api-key", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: apiKeyInput, model: aiModelInput })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save API key");
-      }
-      setAiConfigured(true);
-      setApiKeyPreview(data.keyPreview || "configured");
-      setAiModelInput(data.model || aiModelInput);
-      setApiKeyInput("");
-      setSettingsMessage(language === "EN" ? "AI key saved. Online assistant is ready." : "Το κλειδί AI αποθηκεύτηκε.");
-    } catch (err: any) {
-      setSettingsMessage(err.message || "Failed to save settings");
-    }
-  };
-
-  // Suggested shipboard Q&A prompt presets
-  const promptPresets = [
-    {
-      title: "Scavenge Space Fire",
-      query: "My 2-stroke propulsion engine is showing a scavenge space temperature rise. What is the immediate safety protocol?"
-    },
-    {
-      title: "OWS ppm High Limit",
-      query: "The 15ppm bilge monitor is reading high and discharging to sump. How can I clean and calibrate the photoelectric sensor?"
-    },
-    {
-      title: "Boiler Ignition Failure",
-      query: "The auxiliary boiler keeps tripping with a flame failure alarm after burner startup. Help me trace the electrical and fuel issues."
-    }
-  ];
-
-  // Load saved Q&As from localStorage on initialization
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("marine_ai_saved_qa");
-      if (stored) {
-        setSavedLessons(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Failed to read saved Q&As from localStorage", e);
-    }
-  }, []);
-
-  // Sync to localStorage
-  const saveLessonsToStorage = (updatedList: SavedQaItem[]) => {
-    setSavedLessons(updatedList);
-    try {
-      localStorage.setItem("marine_ai_saved_qa", JSON.stringify(updatedList));
-    } catch (e) {
-      console.error("Failed to write saved Q&As to localStorage", e);
-    }
-  };
-
-  const tokenize = (value: string) => {
-    return value
-      .toLowerCase()
-      .replace(/[^a-z0-9α-ωάέήίόύώϊϋΐΰ%°.-]+/gi, " ")
-      .split(/\s+/)
-      .filter(token => token.length > 2);
-  };
-
-  const scoreText = (queryTokens: string[], text: string) => {
-    const haystack = text.toLowerCase();
-    return queryTokens.reduce((score, token) => score + (haystack.includes(token) ? 1 : 0), 0);
-  };
-
-  const buildOfflineAnswer = (query: string) => {
-    const queryTokens = tokenize(query);
-    if (queryTokens.length === 0 && !selectedRecord) return null;
-
-    const memoryMatches = savedLessons
-      .map(item => ({
-        item,
-        score: scoreText(queryTokens, `${item.topic || ""} ${item.question} ${item.answer}`)
-      }))
-      .filter(entry => entry.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3);
-
-    const recordPool = selectedRecord
-      ? [selectedRecord, ...offlineRecords.filter(record => record.id !== selectedRecord.id)]
-      : offlineRecords;
-
-    const recordMatches = recordPool
-      .map(record => ({
-        record,
-        score: selectedRecord?.id === record.id
-          ? Math.max(3, scoreText(queryTokens, `${record.component} ${record.faultSymptom}`))
-          : scoreText(queryTokens, `${record.category} ${record.makeModel} ${record.component} ${record.faultSymptom} ${record.possibleCauses.join(" ")} ${record.troubleshootingSteps.join(" ")} ${record.safetyPrecautions.join(" ")}`)
-      }))
-      .filter(entry => entry.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 4);
-
-    if (memoryMatches.length === 0 && recordMatches.length === 0) {
-      return `### ⚓ Offline Mode Active\n\nI cannot reach online AI and I did not find a close match in the local learned memory.\n\n**Immediate safe action:**\n- Slow down and stabilize the plant if conditions are abnormal.\n- Inform the bridge/chief engineer.\n- Apply **LOTO** and verify **zero energy state** before any hands-on inspection.\n- Check the vessel-specific maker manual, alarm list, PMS history, and latest trend data.\n\n**To improve offline answers next time:** when internet is available, ask the AI and keep **Adaptive Memory** enabled, or manually add a card in the Offline Lessons Vault.`;
-    }
-
-    const learnedSection = memoryMatches.length > 0
-      ? `\n\n## Learned From Previous AI/Engineer Cases\n${memoryMatches.map(({ item }, index) => `\n### ${index + 1}. ${item.topic || "Saved Lesson"}: ${item.question}\n${item.answer.slice(0, 1600)}${item.answer.length > 1600 ? "\n\n_Trimmed offline memory excerpt._" : ""}`).join("\n")}`
-      : "";
-
-    const recordsSection = recordMatches.length > 0
-      ? `\n\n## Matching Offline Troubleshooting Records\n${recordMatches.map(({ record }, index) => `\n### ${index + 1}. ${record.makeModel} — ${record.component}\n**Symptom:** ${record.faultSymptom}\n\n**Likely causes:**\n${record.possibleCauses.map(cause => `- ${cause}`).join("\n")}\n\n**Checklist:**\n${record.troubleshootingSteps.map((step, stepIndex) => `${stepIndex + 1}. ${step}`).join("\n")}\n\n**Safety:**\n${record.safetyPrecautions.map(item => `- **WARNING:** ${item}`).join("\n")}`).join("\n")}`
-      : "";
-
-    return `### ⚓ Offline Engineering Advisor\n\nOnline AI is unavailable or disabled, so I am answering from the shipboard offline database and the local learned memory.\n\n## Immediate Safety Discipline\n- Notify bridge/chief engineer if the fault affects propulsion, power generation, steering, boiler, fuel, bilge, fire, or MARPOL equipment.\n- Reduce load only in coordination with bridge/operations.\n- Apply **LOTO**, verify **zero pressure/zero energy**, and beware of hot surfaces, stored pressure, and high-pressure fuel injection injuries.\n- Do not rely on generic limits: verify exact alarm limits, clearances, torques, and timings from the vessel-specific maker manual.\n${learnedSection}${recordsSection}\n\n## Offline Confidence Note\nThis is a local best-match answer. If the situation is safety-critical or does not match the symptoms, stop, preserve evidence/trends, and escalate to the chief engineer, superintendent, or OEM.`;
-  };
-
-  const addLearnedLesson = (question: string, answer: string, topic?: string) => {
-    if (!autoLearnEnabled || !question.trim() || !answer.trim()) return;
-    if (savedLessons.some(item => item.question === question || item.answer === answer)) return;
-
-    const newItem: SavedQaItem = {
-      id: `learned-${Date.now()}`,
-      question,
-      answer,
-      timestamp: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      topic: topic || selectedRecord?.component || (language === "EN" ? "Adaptive AI Memory" : "Μνήμη AI")
-    };
-
-    saveLessonsToStorage([newItem, ...savedLessons].slice(0, 300));
-  };
-
-  // Auto-scroll chat to bottom on new messages
-  useEffect(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, activeSubTab]);
+  };
 
-  // Handle case where user selects a record from the Excel dashboard rows
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Auto message when record is selected
   useEffect(() => {
     if (selectedRecord) {
-      // Switch back to chat tab when context is parsed
-      setActiveSubTab("chat");
-      const systemMsg: ChatMessage = {
+      const msg = {
         id: `sys-${Date.now()}`,
         sender: "assistant",
-        text: `### ⚓ Chief Advisor Synced // Component: **${selectedRecord.component}**\n\nI have localized my engineering diagnostic logic to the **${selectedRecord.makeModel} — ${selectedRecord.component}** which is experiencing:  \n**"${selectedRecord.faultSymptom}"**\n\nHow do you want to troubleshoot this issue? Ask me to: \n- Explain the physical chemistry behind the possible causes. \n- Formulate a strict safety checklist for the crew before overhauling. \n- Illustrate detailed mechanical tools needed and a step-by-step repair guide.`,
+        text: `I'm now focused on **${selectedRecord.component}** (${selectedRecord.makeModel}).\n\nWhat would you like to know about this issue?`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-      setMessages(prev => [...prev, systemMsg]);
+      setMessages(prev => [...prev, msg]);
     }
   }, [selectedRecord]);
 
-  // Initial welcome message if chat starts empty
-  useEffect(() => {
-    if (messages.length === 0) {
-      setMessages([
-        {
-          id: "welcome",
-          sender: "assistant",
-          text: `### ⚓ Welcome to the Ship Engine Room AI Control Panel\n\nI am your AI Chief Engineer. I can advise you on complex mechanical troubleshooting, safety guidelines, and operations for propulsion engines, diesel generators, and all auxiliary machineries.\n\nBrowse search terms, click **AI Troubleshoot** on any database record to sync diagnostic focus, or ask a direct question below to begin!`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ]);
-    }
-  }, [messages]);
+  const sendMessage = async () => {
+    if (!input.trim()) return;
 
-  // Clear Chat History
-  const clearChat = () => {
-    if (window.confirm(language === "EN" ? "Do you want to reset the conversation logs?" : "Θέλετε να επαναφέρετε το ιστορικό της συζήτησης;")) {
-      setMessages([]);
-      onClearSelectedRecord();
-    }
-  };
-
-  // Submit query
-  const handleSendMessage = async (textToSend: string) => {
-    const trimmedText = textToSend.trim();
-    if (!trimmedText) return;
-
-    setInputText("");
-    
-    const userMsg: ChatMessage = {
+    const userMessage = {
       id: `user-${Date.now()}`,
       sender: "user",
-      text: trimmedText,
+      text: input.trim(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMessage]);
+    setInput("");
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/troubleshoot", {
+      const res = await fetch("/api/troubleshoot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: trimmedText,
-          chatHistory: messages.filter(m => m.id !== "welcome"),
-          selectedRecord: selectedRecord
+          prompt: input.trim(),
+          selectedRecord: selectedRecord || null,
+          chatHistory: messages.slice(-6)
         })
       });
 
-      if (!response.ok) {
-        throw new Error("HTTP connection error or missing server.ts configuration");
-      }
+      const data = await res.json();
 
-      const data = await response.json();
-      const rawText = data.text || "I was unable to analyze this symptom. Please crossreference with offline ship manuals limit values.";
-      const keyMissing = typeof rawText === "string" && (rawText.includes("AI Key Not Configured") || rawText.includes("API Key Unconfigured"));
-      const offlineText = keyMissing ? buildOfflineAnswer(trimmedText) : null;
-      const finalText = offlineText || rawText;
-      
-      const assistantMsg: ChatMessage = {
-        id: `assist-${Date.now()}`,
+      const assistantMessage = {
+        id: `assistant-${Date.now()}`,
         sender: "assistant",
-        text: finalText,
+        text: data.text || "I couldn't generate a response. Please try again.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      setMessages(prev => [...prev, assistantMsg]);
-      if (!keyMissing && aiConfigured) {
-        addLearnedLesson(trimmedText, finalText, selectedRecord?.component);
-      }
-
-    } catch (err: any) {
-      console.error("AI request failure: ", err);
-      const errorMsg: ChatMessage = {
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
         sender: "assistant",
-        text: `### ⚠️ Diagnostic Link Failure\n\nI was unable to reach the AI model server. \n- **Check Server**: Ensure you have configured your \`GEMINI_API_KEY\` in your secrets pane.\n- **Offline Fallback**: You can continue referencing the pre-loaded **Vast Offline Database** in the main sheet which contains step-by-step procedures completely independent of any server connections!`,
+        text: "⚠️ Unable to connect to the AI service. Please check your connection or API key.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, errorMsg]);
+      }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Save specific AI Message into Offline Learning Vault
-  const handleSaveToVault = (assistantMsg: ChatMessage) => {
-    if (savedLessons.some(item => item.answer === assistantMsg.text)) {
-      return;
-    }
-
-    const assistantIndex = messages.findIndex(m => m.id === assistantMsg.id);
-    let questionText = language === "EN" ? "General Shipboard AI Consultation" : "Γενική Συμβουλευτική Μηχανοστασίου AI";
-    
-    if (assistantIndex > 0) {
-      for (let i = assistantIndex - 1; i >= 0; i--) {
-        if (messages[i].sender === "user") {
-          questionText = messages[i].text;
-          break;
-        }
-      }
-    } else if (selectedRecord) {
-      questionText = language === "EN"
-        ? `Symptom Consultation: ${selectedRecord.faultSymptom} on ${selectedRecord.component}`
-        : `Διάγνωση Συμπτώματος: ${selectedRecord.faultSymptom} στο στοιχείο ${selectedRecord.component}`;
-    }
-
-    const newItem: SavedQaItem = {
-      id: `saved-${Date.now()}`,
-      question: questionText,
-      answer: assistantMsg.text,
-      timestamp: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      topic: selectedRecord?.component || (language === "EN" ? "AI Advisory" : "Συμβουλή AI")
-    };
-
-    const newList = [newItem, ...savedLessons];
-    saveLessonsToStorage(newList);
-
-    setSaveSuccessId(assistantMsg.id);
-    setTimeout(() => {
-      setSaveSuccessId(null);
-    }, 2500);
+  const clearChat = () => {
+    setMessages([{
+      id: "welcome",
+      sender: "assistant",
+      text: "Chat cleared. How can I help you?",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }]);
+    onClearSelectedRecord();
   };
-
-  // Delete saved lesson
-  const handleDeleteSavedItem = (id: string) => {
-    if (window.confirm(language === "EN" ? "Delete this saved learning card?" : "Διαγραφή αυτού του αποθηκευμένου μαθήματος;")) {
-      const filtered = savedLessons.filter(item => item.id !== id);
-      saveLessonsToStorage(filtered);
-      if (expandedSavedId === id) {
-        setExpandedSavedId(null);
-      }
-    }
-  };
-
-  // Export saved lessons as backup JSON
-  const handleExportSavedLessons = () => {
-    try {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedLessons, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `marine_engine_ai_saved_qa_${Date.now()}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    } catch (e) {
-      console.error("Export failed", e);
-    }
-  };
-
-  // Add customized study card manually
-  const handleAddCustomLesson = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customQuestion.trim() || !customAnswer.trim()) return;
-
-    const newItem: SavedQaItem = {
-      id: `custom-${Date.now()}`,
-      question: customQuestion.trim(),
-      answer: customAnswer.trim(),
-      timestamp: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      topic: customTopic.trim() || (language === "EN" ? "Manual Lesson" : "Χειροκίνητο Μάθημα")
-    };
-
-    const newList = [newItem, ...savedLessons];
-    saveLessonsToStorage(newList);
-
-    setCustomQuestion("");
-    setCustomAnswer("");
-    setCustomTopic("");
-    setShowCustomForm(false);
-    setExpandedSavedId(newItem.id);
-  };
-
-  // Filter saved lessons based on the query search bar
-  const filteredLessons = savedLessons.filter(item => {
-    const q = searchQuery.toLowerCase();
-    return item.question.toLowerCase().includes(q) || 
-           item.answer.toLowerCase().includes(q) || 
-           (item.topic && item.topic.toLowerCase().includes(q));
-  });
 
   return (
-    <div className="flex flex-col h-full bg-[#0d1425] border border-slate-800 rounded-xl shadow-xl overflow-hidden shrink-0" id="ai-cabinet">
-      
-      {showAiSettings && (
-        <div className="absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleSaveAiSettings} className="w-full max-w-lg bg-[#0b1424] border border-[#cca45c]/40 rounded-xl shadow-2xl p-5 flex flex-col gap-4">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-[#dfb15b]" />
-                <div>
-                  <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">{language === "EN" ? "Online AI Configuration" : "Ρύθμιση Online AI"}</h3>
-                  <p className="text-[10px] text-slate-400 font-mono">{aiConfigured ? `Configured: ${apiKeyPreview}` : (language === "EN" ? "Gemini API key required for live AI help" : "Απαιτείται Gemini API key")}</p>
-                </div>
-              </div>
-              <button type="button" onClick={() => setShowAiSettings(false)} className="text-slate-500 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3 text-[11px] text-slate-300 leading-relaxed">
-              {language === "EN"
-                ? "The desktop app works offline for tables, calculators, and saved lessons. For online engineering AI answers, paste a Gemini API key. It is stored locally on this computer by the backend configuration file."
-                : "Η εφαρμογή λειτουργεί offline για πίνακες, υπολογισμούς και αποθηκευμένα μαθήματα. Για online AI απαντήσεις, εισάγετε Gemini API key."}
-            </div>
-
-            <label className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-mono font-bold uppercase text-slate-400">Gemini API Key</span>
-              <input
-                type="password"
-                value={apiKeyInput}
-                onChange={(e) => setApiKeyInput(e.target.value)}
-                placeholder="Paste API key here"
-                className="bg-slate-900 border border-slate-700 rounded px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-[#cca45c]/70"
-                autoComplete="off"
-              />
-            </label>
-
-            <label className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-mono font-bold uppercase text-slate-400">AI Model</span>
-              <input
-                type="text"
-                value={aiModelInput}
-                onChange={(e) => setAiModelInput(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-[#cca45c]/70"
-              />
-            </label>
-
-            <label className="flex items-start gap-2 rounded-lg border border-slate-800 bg-slate-950/40 p-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={autoLearnEnabled}
-                onChange={(e) => setAutoLearnEnabled(e.target.checked)}
-                className="mt-0.5 accent-[#cca45c]"
-              />
-              <span className="text-[11px] text-slate-300 leading-relaxed">
-                <b className="text-[#dfb15b]">{language === "EN" ? "Adaptive Memory" : "Προσαρμοστική Μνήμη"}</b> — {language === "EN"
-                  ? "automatically save successful AI answers into the Offline Lessons Vault so the app can answer similar cases at sea without internet."
-                  : "αποθηκεύει αυτόματα επιτυχημένες απαντήσεις AI για offline χρήση."}
-              </span>
-            </label>
-
-            {settingsMessage && (
-              <p className={`text-[11px] font-mono ${settingsMessage.toLowerCase().includes("failed") || settingsMessage.toLowerCase().includes("required") ? "text-red-300" : "text-emerald-300"}`}>{settingsMessage}</p>
-            )}
-
-            <div className="flex gap-2 justify-end">
-              <button type="button" onClick={() => setShowAiSettings(false)} className="px-3 py-2 text-[11px] font-bold uppercase rounded bg-slate-900 text-slate-300 border border-slate-700 hover:text-white">
-                {language === "EN" ? "Close" : "Κλείσιμο"}
-              </button>
-              <button type="submit" className="px-3 py-2 text-[11px] font-bold uppercase rounded bg-[#cca45c] text-slate-950 hover:bg-[#dfb15b]">
-                {language === "EN" ? "Save AI Key" : "Αποθήκευση"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Tab Switcher Panel & Main Control */}
-      <div className="p-3 bg-[#111827] border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3" id="ai-cabinet-header">
-        
-        {/* Logo and Identification */}
-        <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <Bot className="w-5 h-5 text-[#dfb15b]" />
-            <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-slate-950 animate-pulse" />
+    <div className="flex flex-col h-full bg-[#0b1424]">
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-[#22d3ee] rounded-xl flex items-center justify-center">
+            <Bot className="w-4 h-4 text-[#0a111f]" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-slate-100 flex items-center gap-1.5 font-display uppercase tracking-wider">
-              {language === "EN" ? "DIAGNOSTIC AI WORKSTATION" : "ΣΤΑΘΜΟΣ ΤΕΧΝΗΤΗΣ ΝΟΗΜΟΣΥΝΗΣ"}
-              <Sparkles className="w-3.5 h-3.5 text-[#dfb15b] animate-pulse" />
-            </h3>
-            <p className="text-[9px] text-[#dfb15b] uppercase tracking-widest font-mono">
-              {language === "EN" ? "Co-Pilot & Offline Knowledge Locker" : "Συνεργάτης Διάγνωσης & Τοπική Αποθήκη"}
-            </p>
+            <div className="font-semibold">Chief Engineer AI</div>
+            <div className="text-xs text-emerald-400">Online • Ready to assist</div>
           </div>
         </div>
 
-        {/* Local Workstation Sub-Tabs */}
-        <div className="flex items-center gap-1.5 self-stretch md:self-auto w-full md:w-auto overflow-x-auto">
-          <button
-            onClick={() => setActiveSubTab("chat")}
-            className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded transition-all cursor-pointer border ${
-              activeSubTab === "chat"
-                ? "bg-[#11223b] text-[#dfb15b] border-[#cca45c]/50 shadow-inner"
-                : "bg-slate-900 text-slate-400 border-transparent hover:text-slate-200"
-            }`}
-          >
-            <Bot className="w-3.5 h-3.5" />
-            <span>{t.tabActiveChat}</span>
-          </button>
-
-          <button
-            onClick={() => setShowAiSettings(true)}
-            className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded transition-all cursor-pointer border ${
-              aiConfigured
-                ? "bg-emerald-950/30 text-emerald-300 border-emerald-500/30"
-                : "bg-red-950/30 text-red-300 border-red-500/30 hover:text-red-200"
-            }`}
-            title={language === "EN" ? "Configure Gemini API key for online AI" : "Ρύθμιση κλειδιού Gemini API"}
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span>{language === "EN" ? "AI Settings" : "Ρυθμίσεις AI"}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab("vault")}
-            className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-[10px] font-bold font-mono uppercase tracking-wider rounded transition-all cursor-pointer border ${
-              activeSubTab === "vault"
-                ? "bg-[#11223b] text-[#dfb15b] border-[#cca45c]/50 shadow-inner"
-                : "bg-slate-900 text-slate-400 border-transparent hover:text-slate-200"
-            }`}
-          >
-            <BookMarked className="w-3.5 h-3.5" />
-            <span>{t.tabLessons}</span>
-            <span className="ml-1 bg-[#cca45c]/25 text-[#dfb15b] rounded-full px-1.5 py-0.2 text-[8px] border border-[#cca45c]/20">
-              {savedLessons.length}
-            </span>
+        <div className="flex items-center gap-2">
+          {selectedRecord && (
+            <div className="text-xs px-3 py-1 bg-[#11223b] rounded-full border border-[#22d3ee]/30 text-[#22d3ee]">
+              Focused
+            </div>
+          )}
+          <button onClick={clearChat} className="p-2 hover:bg-[#11223b] rounded-xl">
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
-
       </div>
 
-      {/* Sync Banner if active db focus is chosen */}
-      {selectedRecord && activeSubTab === "chat" && (
-        <div className="bg-[#11223b] border-b border-[#cca45c]/25 p-2 px-4 flex justify-between items-center text-xs text-sky-200 animate-fade-in" id="record-lock-banner">
-          <div className="flex items-center gap-1.5 truncate">
-            <span className="w-1.5 h-1.5 bg-[#dfb15b] rounded-full animate-ping shrink-0" />
-            <span className="font-bold text-[#dfb15b] font-mono text-[10px] tracking-widest shrink-0 uppercase">ANALYZING SPEC CODES:</span>
-            <span className="truncate italic text-slate-300 font-mono text-[11px]">{selectedRecord.component} ({selectedRecord.makeModel})</span>
-          </div>
-          <button 
-            onClick={onClearSelectedRecord}
-            className="p-0.5 bg-[#cca45c]/10 hover:bg-[#cca45c]/20 text-[#dfb15b] rounded transition-colors cursor-pointer"
-            title="Deselect active machine reference"
-          >
-            <X className="w-3 h-3" />
-          </button>
-        </div>
-      )}
-
-      {/* Active Tab Screen Area */}
-      <div className="flex-1 overflow-hidden relative flex flex-col">
-
-        {activeSubTab === "chat" ? (
-          /* ================= ACTIVE CHAT MODE ================= */
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 text-xs" id="chat-messages-scroll-area">
-            {messages.map((msg) => {
-              const isAI = msg.sender === "assistant";
-              const isAlreadySaved = isAI && savedLessons.some(item => item.answer === msg.text);
-              const isSuccess = saveSuccessId === msg.id;
-
-              return (
-                <div 
-                  key={msg.id} 
-                  className={`flex flex-col max-w-[92%] ${isAI ? "self-start w-full" : "self-end"}`}
-                  id={`chat-msg-${msg.id}`}
-                >
-                  {/* Sender Tag Header */}
-                  <span className={`text-[9px] font-mono text-slate-400 mb-1 flex items-center justify-between gap-2 uppercase tracking-wider ${!isAI ? "self-end" : "self-start w-full"}`}>
-                    <span className="flex items-center gap-1">
-                      {isAI ? (
-                        <>
-                          <Bot className="w-3 h-3 text-[#dfb15b]" />
-                          <span className="text-[#dfb15b] font-bold">CHIEF_ADVISOR.EXE</span>
-                        </>
-                      ) : (
-                        <span className="text-slate-400 font-bold">STAFF_ENGINEER</span>
-                      )}
-                      <span>•</span>
-                      <Clock className="w-2.5 h-2.5 text-slate-500" />
-                      <span>{msg.timestamp}</span>
-                    </span>
-
-                    {/* Action buttons on AI response bubble */}
-                    {isAI && msg.id !== "welcome" && (
-                      <button
-                        onClick={() => handleSaveToVault(msg)}
-                        disabled={isAlreadySaved}
-                        className={`p-1 px-2.5 rounded text-[9px] font-bold font-mono tracking-widest uppercase flex items-center gap-1.5 cursor-pointer select-none transition-all border ${
-                          isSuccess
-                            ? "bg-emerald-950/80 text-emerald-400 border-emerald-500/50"
-                            : isAlreadySaved
-                            ? "bg-[#11223b]/50 text-[#dfb15b]/60 border-[#cca45c]/20 cursor-default"
-                            : "bg-[#11223b] hover:bg-[#1b3254] text-[#dfb15b] border-[#cca45c]/35 shadow-sm hover:scale-105 active:scale-95"
-                        }`}
-                        title={isAlreadySaved ? "Saved to offline database" : "Save this answer to offline Vault"}
-                      >
-                        {isSuccess ? (
-                          <>
-                            <Check className="w-3 h-3 text-emerald-400" />
-                            <span>{language === "EN" ? "SAVED" : "ΑΠΟΘΗΚΕΥΤΗΚΕ"}</span>
-                          </>
-                        ) : isAlreadySaved ? (
-                          <>
-                            <FileCheck className="w-3 h-3 text-emerald-400" />
-                            <span>{language === "EN" ? "OFFLINE SAVED" : "OFFLINE ΑΠΟΘΗΚΕΥΜΕΝΟ"}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Bookmark className="w-3 h-3 text-[#dfb15b]" />
-                            <span>{t.buttonSaveToVault}</span>
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </span>
-
-                  {/* Message Bubble Frame */}
-                  <div className={`p-3.5 rounded-lg border leading-relaxed text-xs shadow-md ${
-                    isAI 
-                      ? "bg-[#0b1424]/75 border-slate-800 text-slate-200" 
-                      : "bg-[#11223b]/60 border-[#cca45c]/20 text-slate-100 self-end"
-                  }`}>
-                    {isAI ? (
-                      <div className="markdown-body select-text flex flex-col gap-2">
-                        <Markdown>{msg.text}</Markdown>
-                      </div>
-                    ) : (
-                      <p className="whitespace-pre-wrap select-text font-mono text-[11px] text-slate-200">{msg.text}</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-            
-            {/* Loading Bubble */}
-            {isLoading && (
-              <div className="flex flex-col max-w-[90%] self-start animate-pulse" id="ai-chat-loader">
-                <span className="text-[9px] font-mono text-[#dfb15b] mb-1 flex items-center gap-1 uppercase tracking-wider">
-                  <Bot className="w-3 h-3 text-[#dfb15b]" />
-                  <span>CHIEF_ADVISOR.EXE</span>
-                </span>
-                <div className="p-3.5 bg-slate-900/40 border border-slate-800 rounded-lg flex items-center gap-2.5 text-slate-300">
-                  <Loader2 className="w-4 h-4 text-[#dfb15b] animate-spin" />
-                  <span className="italic text-2xs font-mono text-slate-400">
-                    {language === "EN" 
-                      ? "Chief Engineer analyzing telemetry, mapping safety variables..."
-                      : "Ο Πρώτος αναλύει σενάρια βλαβών, υπολογίζει όρια ασφαλείας..."}
-                  </span>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        ) : (
-          /* ================= VAULT OFFLINE MODE ================= */
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 text-xs" id="vault-tab-inner">
-            
-            {/* Header controls inside offline locker */}
-            <div className="bg-[#0c1524] p-3 border border-slate-800/80 rounded-lg flex flex-col gap-3 shrink-0">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                
-                <h4 className="text-xs font-bold text-slate-100 font-display flex items-center gap-2 uppercase tracking-wide">
-                  <BookOpen className="w-4 h-4 text-[#dfb15b]" />
-                  <span>{t.savedLessonsTitle}</span>
-                </h4>
-
-                <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
-                  {savedLessons.length > 0 && (
-                    <button
-                      onClick={handleExportSavedLessons}
-                      className="p-1 px-2.5 bg-slate-900 hover:bg-slate-805 text-slate-300 hover:text-white border border-slate-800 hover:border-[#cca45c]/30 rounded text-[10px] font-mono uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all"
-                      title="Export all database learning units into physical JSON files"
-                    >
-                      <Download className="w-3 h-3 text-[#dfb15b]" />
-                      <span>{language === "EN" ? "Backup Locker" : "Εξαγωγή Αντιγράφου"}</span>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => setShowCustomForm(!showCustomForm)}
-                    className="p-1 px-2.5 bg-[#11223b] hover:bg-[#1b3254] text-[#dfb15b] border border-[#cca45c]/40 rounded text-[10px] font-mono uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-inner"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    <span>{showCustomForm ? (language === "EN" ? "Cancel" : "Ακύρωση") : (language === "EN" ? "Draft Card" : "Προσθήκη Κάρτας")}</span>
-                  </button>
-                </div>
-
-              </div>
-
-              {/* Offline Search Bar */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder={t.labelSearchLessons}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#050a14] border border-slate-800 text-xs text-slate-200 placeholder-slate-500 py-1.5 pl-8 pr-3 rounded focus:outline-none focus:border-[#cca45c]/50 font-mono"
-                />
-                {searchQuery && (
-                  <button 
-                    onClick={() => setSearchQuery("")} 
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-6 text-sm">
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : ""}`}>
+            <div className={`max-w-[85%] ${msg.sender === "user" ? "bg-[#22d3ee] text-[#0a111f]" : "bg-[#11223b]"} px-5 py-3 rounded-2xl`}>
+              <div className="whitespace-pre-wrap">{msg.text}</div>
+              <div className="text-[10px] mt-1.5 opacity-60 text-right">{msg.timestamp}</div>
             </div>
+          </div>
+        ))}
 
-            {/* Custom Manual Lesson Card Creator Block */}
-            {showCustomForm && (
-              <form 
-                onSubmit={handleAddCustomLesson}
-                className="bg-[#0b1424] border border-[#cca45c]/30 rounded-lg p-3.5 p-4 flex flex-col gap-3 animate-fade-in"
-              >
-                <div className="flex justify-between items-center border-b border-[#cca45c]/10 pb-2">
-                  <span className="text-xs font-bold text-[#dfb15b] font-display uppercase tracking-wider flex items-center gap-1.5">
-                    <PlusCircle className="w-4 h-4" />
-                    <span>{t.customLessonFormTitle}</span>
-                  </span>
-                  <button type="button" onClick={() => setShowCustomForm(false)} className="text-slate-500 hover:text-slate-200">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-mono font-bold text-slate-400 uppercase">{language === "EN" ? "Machine Segment / Topic" : "Μηχάνημα / Θέμα"}</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Scavenge System, HP Injectors No.4"
-                      value={customTopic}
-                      onChange={(e) => setCustomTopic(e.target.value)}
-                      className="bg-slate-900 border border-slate-800 rounded px-2 tracking-wide py-1 text-slate-200 text-xs focus:ring-1 focus:ring-[#cca45c]/50 focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-mono font-bold text-slate-400 uppercase">{t.customLessonLabelQuestion}</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder={t.customLessonPlaceholderQ}
-                      value={customQuestion}
-                      onChange={(e) => setCustomQuestion(e.target.value)}
-                      className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs focus:ring-1 focus:ring-[#cca45c]/50 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-mono font-bold text-slate-400 uppercase">{t.customLessonLabelAnswer}</label>
-                  <textarea
-                    required
-                    rows={3}
-                    placeholder={t.customLessonPlaceholderA}
-                    value={customAnswer}
-                    onChange={(e) => setCustomAnswer(e.target.value)}
-                    className="bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-slate-200 text-xs focus:ring-1 focus:ring-[#cca45c]/50 focus:outline-none font-mono"
-                  ></textarea>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2 bg-[#cca45c] hover:bg-[#8c6b2d] text-slate-950 hover:text-white font-bold rounded text-xs transition-colors uppercase tracking-wider font-mono flex items-center justify-center gap-1.5"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>{t.buttonAddCustomLesson}</span>
-                </button>
-              </form>
-            )}
-
-            {/* Offline Database Render list */}
-            {filteredLessons.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center p-8 border border-dashed border-slate-850 rounded-lg bg-slate-900/20 text-slate-400 gap-2 flex-1" id="vault-empty-view">
-                <FileCheck className="w-8 h-8 text-slate-600 animate-pulse" />
-                <p className="max-w-xs font-medium text-slate-400 leading-relaxed text-[11px] font-sans">
-                  {t.savedLessonsEmpty}
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2 flex-1 pb-4" id="vault-cards-list">
-                {filteredLessons.map((item) => {
-                  const isExpanded = expandedSavedId === item.id;
-                  return (
-                    <div 
-                      key={item.id}
-                      className={`border rounded-lg overflow-hidden transition-all duration-200 ${
-                        isExpanded 
-                          ? "bg-[#0f1a2e] border-[#cca45c]/50 shadow-md" 
-                          : "bg-[#0b1424] hover:bg-[#11223b]/50 border-slate-800 hover:border-slate-750"
-                      }`}
-                    >
-                      {/* Card Header clickable to expand */}
-                      <div 
-                        onClick={() => setExpandedSavedId(isExpanded ? null : item.id)}
-                        className="p-3 flex justify-between items-start gap-4 cursor-pointer select-none"
-                      >
-                        <div className="flex-1 min-w-0">
-                          {/* Topic label tag */}
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="bg-[#11223b] text-[#dfb15b] border border-[#cca45c]/30 text-[8px] font-mono font-bold uppercase tracking-widest px-1.5 py-0.2 rounded">
-                              {item.topic}
-                            </span>
-                            <span className="text-[8px] text-slate-500 font-mono">
-                              {item.timestamp}
-                            </span>
-                          </div>
-                          {/* Question text */}
-                          <h5 className="text-[11px] font-bold text-slate-100 font-mono tracking-normal leading-snug line-clamp-2">
-                            {item.question}
-                          </h5>
-                        </div>
-
-                        {/* Expand / delete actions */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteSavedItem(item.id);
-                            }}
-                            className="p-1 text-slate-500 hover:text-red-400 hover:bg-slate-900 rounded transition-all"
-                            title={t.buttonDeleteLesson}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Card Body - Markdown Content Renderer */}
-                      {isExpanded && (
-                        <div className="p-3.5 bg-[#080d19]/80 border-t border-slate-800/80 animate-fade-in text-slate-200 select-text leading-relaxed">
-                          <div className="markdown-body text-xs">
-                            <Markdown>{item.answer}</Markdown>
-                          </div>
-                        </div>
-                      )}
-
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
+        {isLoading && (
+          <div className="flex">
+            <div className="bg-[#11223b] px-5 py-3 rounded-2xl flex items-center gap-2">
+              <div className="animate-pulse">Thinking...</div>
+            </div>
           </div>
         )}
-
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Input Presets (Shown in Active conversation when logs are sparse) */}
-      {messages.length <= 2 && !isLoading && activeSubTab === "chat" && (
-        <div className="p-3 border-t border-slate-800 bg-slate-950/60 flex flex-col gap-2 shrink-0" id="ai-quick-presets">
-          <p className="text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider flex items-center gap-1">
-            <HelpCircle className="w-3.5 h-3.5 text-[#dfb15b]" />
-            {language === "EN" ? "Suggested Diagnostic Scenarios" : "Προτεινόμενα Σενάρια Διάγνωσης"}
-          </p>
-          <div className="flex flex-col gap-1.5">
-            {promptPresets.map((preset, index) => (
-              <button
-                key={index}
-                onClick={() => handleSendMessage(preset.query)}
-                className="text-left text-[11px] p-2 bg-[#111827]/40 hover:bg-[#111827] border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white rounded font-medium transition-all truncate cursor-pointer"
-                title={preset.query}
-              >
-                <b className="text-[#dfb15b]">{preset.title}:</b> {preset.query}
-              </button>
-            ))}
-          </div>
+      {/* Input */}
+      <div className="p-4 border-t border-slate-700">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder={selectedRecord ? `Ask about ${selectedRecord.component}...` : "Ask anything about marine engineering..."}
+            className="flex-1 bg-[#11223b] border border-slate-700 rounded-2xl px-5 py-3 text-sm focus:outline-none"
+            disabled={isLoading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || isLoading}
+            className="px-5 bg-[#22d3ee] text-[#0a111f] rounded-2xl disabled:opacity-50"
+          >
+            <Send className="w-4 h-4" />
+          </button>
         </div>
-      )}
-
-      {/* Input Box Area when chatting */}
-      {activeSubTab === "chat" && (
-        <div className="p-3 bg-[#111827] border-t border-slate-800 shrink-0" id="ai-input-chamber">
-          <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5">
-            <div className="text-cyan-500">
-              <Bot className="w-4 h-4 text-[#dfb15b] animate-pulse" />
-            </div>
-            <input
-              id="chat-input-field"
-              type="text"
-              placeholder={selectedRecord ? "Query synced active fault code parameters..." : "Query ship diagnostics, calculations, or manuals..."}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isLoading) {
-                  handleSendMessage(inputText);
-                }
-              }}
-              disabled={isLoading}
-              className="flex-1 bg-transparent border-none text-xs text-slate-200 focus:ring-0 placeholder-slate-500 focus:outline-none"
-            />
-            <button
-              id="send-chat-btn"
-              onClick={() => handleSendMessage(inputText)}
-              disabled={isLoading || !inputText.trim()}
-              className="px-3 py-1 bg-[#cca45c] hover:bg-[#8c6b2d] text-slate-950 font-bold hover:text-white text-[11px] rounded shadow-sm cursor-pointer disabled:bg-slate-800 disabled:text-slate-500 transition-colors uppercase tracking-wider font-mono"
-              title="Transmit message to AI Chief"
-            >
-              {language === "EN" ? "SEND" : "ΑΠΟΣΤΟΛΗ"}
-            </button>
-          </div>
-          <div className="mt-2 text-[9px] text-slate-600 text-center font-mono uppercase tracking-wide" id="engine-advisory-clause">
-            <span>* OFFLINE READY: LOCAL DATABASE + ADAPTIVE MEMORY. ONLINE AI ONLY WHEN CONNECTION/API KEY IS AVAILABLE.</span>
-          </div>
+        <div className="text-center text-[10px] text-slate-500 mt-2">
+          AI responses are based on engineering knowledge + your local database
         </div>
-      )}
+      </div>
     </div>
   );
 }
