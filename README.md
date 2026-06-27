@@ -97,3 +97,41 @@ The app is built for ships with limited internet:
 - Those saved AI/engineer answers become part of the offline answer engine for future similar cases.
 
 This means the app can gradually become more useful for each vessel and crew without requiring constant connectivity.
+
+## PWA / Android preparation release
+
+Version 1.1.0 adds a PWA layer so the same React app can be installed from Android Chrome or desktop browsers where supported.
+
+### PWA offline behavior
+
+- `public/sw.js` caches the app shell and static assets.
+- `public/manifest.webmanifest` provides Android/desktop install metadata.
+- The app registers the service worker from `src/pwa.ts`.
+- A small install/offline prompt appears in the UI when installation is available or when the device goes offline.
+- API/AI calls are intentionally not cached. If internet is unavailable, the existing Offline Engineering Advisor searches local records and Adaptive Memory.
+
+### Android Capacitor path
+
+Capacitor dependencies and configuration are included, but the large native `android/` project is not committed yet. Generate it on a development machine with Android Studio installed:
+
+```bash
+npm install
+npm run android:add
+npm run android:sync
+npm run android:open
+```
+
+For a debug APK after the Android project is generated:
+
+```bash
+npm run android:build:debug
+```
+
+Recommended production path:
+
+1. Test the PWA on Android Chrome first.
+2. Improve phone/tablet UI where needed.
+3. Generate the Capacitor Android project.
+4. Build a signed `.aab` in Android Studio for Google Play or a signed `.apk` for private distribution.
+
+The already published Windows desktop release remains separate. PWA/Android preparation is published under its own version tag.

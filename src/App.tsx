@@ -10,6 +10,7 @@ import PointDefectSystem from "./components/PointDefectSystem";
 import { UnitConverter } from "./components/UnitConverter";
 import PcDesktopTab from "./components/PcDesktopTab";
 import VesselCalculations from "./components/VesselCalculations";
+import PwaInstallPrompt from "./components/PwaInstallPrompt";
 import { uiTranslations, recordTranslations } from "./translations";
 import { 
   Anchor, 
@@ -504,6 +505,8 @@ export default function App() {
       </main>
 
       {/* GLOBAL POPUP: IMMERSIVE HIGH-CONTRAST SEVERE-CONDITIONS TROUBLESHOOTING CARD */}
+      <PwaInstallPrompt />
+
       {globalSelectedManual && (() => {
         const gIndex = recordTranslations[globalSelectedManual.id];
         const mComponent = (language === "GR" && gIndex) ? gIndex.component : globalSelectedManual.component;
