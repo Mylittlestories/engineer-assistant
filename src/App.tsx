@@ -12,7 +12,8 @@ import {
   Sun, 
   Globe,
   ShieldCheck,
-  Settings
+  Settings,
+  X
 } from "lucide-react";
 
 export default function App() {
@@ -56,7 +57,7 @@ export default function App() {
     localStorage.setItem("marine_theme", newTheme);
   };
 
-  // Keyboard shortcut: Press "/" to focus search
+  // Keyboard shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "/" && document.activeElement?.tagName !== "INPUT") {
@@ -72,21 +73,23 @@ export default function App() {
   return (
     <div className={`min-h-screen flex flex-col font-sans ${theme === "light" ? "theme-light bg-[#f8fafc] text-slate-900" : "bg-[#0a111f] text-slate-200"}`}>
       
-      {/* Header */}
+      {/* === CLEAN HEADER === */}
       <header className="bg-[#0b1424] border-b border-slate-700 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#22d3ee] rounded-2xl flex items-center justify-center">
-              <span className="text-[#0a111f] font-black text-xl">DRV</span>
-            </div>
-            <div>
-              <div className="font-semibold text-lg tracking-tight">Engineer Assistant</div>
-              <div className="text-[10px] text-slate-400 -mt-1">Professional Marine Engineering Toolkit</div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#22d3ee] rounded-2xl flex items-center justify-center">
+                <span className="text-[#0a111f] font-black text-2xl tracking-[-1px]">DRV</span>
+              </div>
+              <div>
+                <div className="font-semibold text-xl tracking-tight">Engineer Assistant</div>
+                <div className="text-[10px] text-slate-400 -mt-1">Professional Marine Engineering Toolkit</div>
+              </div>
             </div>
           </div>
 
           {/* Global Search */}
-          <div className="flex-1 max-w-lg mx-8">
+          <div className="flex-1 max-w-md mx-8">
             <div className="relative">
               <Search className="absolute left-4 top-3 w-4 h-4 text-slate-400" />
               <input
@@ -101,42 +104,37 @@ export default function App() {
 
           {/* Controls */}
           <div className="flex items-center gap-2">
-            <button onClick={handleThemeToggle} className="p-2.5 hover:bg-[#11223b] border border-slate-700 rounded-2xl">
+            <button onClick={handleThemeToggle} className="p-2.5 hover:bg-[#11223b] border border-slate-700 rounded-2xl transition-colors">
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             
-            <button onClick={() => setLanguage(l => l === "EN" ? "GR" : "EN")} className="flex items-center gap-2 px-3 py-2 hover:bg-[#11223b] border border-slate-700 rounded-2xl text-sm">
+            <button onClick={() => setLanguage(l => l === "EN" ? "GR" : "EN")} className="flex items-center gap-2 px-3 py-2 hover:bg-[#11223b] border border-slate-700 rounded-2xl text-sm transition-colors">
               <Globe className="w-4 h-4" />
-              <span className="font-mono text-xs">{language}</span>
+              <span className="font-mono text-xs font-medium">{language}</span>
             </button>
 
-            <button onClick={() => setShowConverter(!showConverter)} className="flex items-center gap-2 px-4 py-2 bg-[#11223b] hover:bg-[#1e293b] border border-slate-700 rounded-2xl text-sm">
+            <button onClick={() => setShowConverter(!showConverter)} className="flex items-center gap-2 px-4 py-2 bg-[#11223b] hover:bg-[#1e293b] border border-slate-700 rounded-2xl text-sm transition-colors">
               <ArrowLeftRight className="w-4 h-4" />
               <span>Converter</span>
             </button>
 
-            <button onClick={() => setShowAiSettings(true)} className="flex items-center gap-2 px-4 py-2 bg-[#11223b] hover:bg-[#1e293b] border border-slate-700 rounded-2xl text-sm">
+            <button onClick={() => setShowAiSettings(true)} className="flex items-center gap-2 px-4 py-2 bg-[#11223b] hover:bg-[#1e293b] border border-slate-700 rounded-2xl text-sm transition-colors">
               <Settings className="w-4 h-4" />
-              <span>AI Key</span>
+              <span>AI</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* === MAIN CONTENT === */}
+      <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Database */}
+          {/* Database Section */}
           <div className="lg:col-span-7">
-            <div className="flex items-center justify-between mb-4 px-1">
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight">Troubleshooting Database</h2>
-                <p className="text-sm text-slate-400">Offline marine engineering knowledge base</p>
-              </div>
-              <div className="text-xs px-4 py-1.5 bg-[#11223b] border border-slate-700 rounded-full text-[#22d3ee]">
-                {records.length} records
-              </div>
+            <div className="mb-5 px-1">
+              <h2 className="text-2xl font-semibold tracking-tight">Troubleshooting Database</h2>
+              <p className="text-sm text-slate-400 mt-1">Searchable offline knowledge base</p>
             </div>
 
             <div className="border border-slate-700 rounded-3xl overflow-hidden bg-[#0b1424]">
@@ -156,14 +154,17 @@ export default function App() {
 
           {/* AI Assistant */}
           <div className="lg:col-span-5">
-            <div className="flex items-center justify-between mb-4 px-1">
+            <div className="mb-5 px-1 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bot className="w-5 h-5 text-[#22d3ee]" />
                 <h2 className="text-2xl font-semibold tracking-tight">Chief Engineer AI</h2>
               </div>
               {selectedRecordForAi && (
-                <button onClick={() => setSelectedRecordForAi(null)} className="text-xs px-3 py-1 bg-[#11223b] hover:bg-red-900/30 border border-slate-700 rounded-full">
-                  Clear Focus
+                <button 
+                  onClick={() => setSelectedRecordForAi(null)} 
+                  className="text-xs px-3 py-1 bg-[#11223b] hover:bg-red-900/30 border border-slate-700 rounded-full flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" /> Clear Focus
                 </button>
               )}
             </div>
@@ -181,20 +182,24 @@ export default function App() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-slate-700 bg-[#0b1424] py-4">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between text-xs text-slate-400">
+      <footer className="border-t border-slate-700 bg-[#0b1424] py-5">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 gap-2">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#22d3ee]" />
             <span>SOLAS • MARPOL • STCW Compliant • Fully Offline</span>
           </div>
-          <div>Professional Marine Engineering Tool • v1.3.4</div>
+          <div>Professional Marine Engineering Tool • v1.4.0</div>
         </div>
       </footer>
 
-      {/* Floating Converter */}
+      {/* Floating Unit Converter */}
       {showConverter && (
         <div className="fixed bottom-6 right-6 w-[380px] z-50 shadow-2xl">
-          <UnitConverter language={language} isWidgetMode onCloseWidget={() => setShowConverter(false)} />
+          <UnitConverter 
+            language={language} 
+            isWidgetMode 
+            onCloseWidget={() => setShowConverter(false)} 
+          />
         </div>
       )}
 
@@ -202,14 +207,14 @@ export default function App() {
       {showAiSettings && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <div className="bg-[#0b1424] border border-slate-700 rounded-2xl w-full max-w-md p-6">
-            <div className="flex justify-between mb-4">
+            <div className="flex justify-between items-center mb-4">
               <div className="font-semibold">AI Configuration</div>
               <button onClick={() => setShowAiSettings(false)}><X className="w-5 h-5" /></button>
             </div>
-            <div className="text-sm text-slate-300">
-              To use the online AI, please open the <strong>Chief Engineer AI</strong> panel and click the settings icon (gear) inside it to configure your Gemini API key.
+            <div className="text-sm text-slate-300 mb-6">
+              To use the online AI, open the <strong>Chief Engineer AI</strong> panel and click the gear icon inside it to enter your Gemini API key.
             </div>
-            <button onClick={() => setShowAiSettings(false)} className="mt-6 w-full py-3 border border-slate-700 rounded-2xl">Close</button>
+            <button onClick={() => setShowAiSettings(false)} className="w-full py-3 border border-slate-700 rounded-2xl">Close</button>
           </div>
         </div>
       )}
