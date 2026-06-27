@@ -16,6 +16,7 @@ import {
   X
 } from "lucide-react";
 import QuickReference from "./components/QuickReference";
+import EmergencyChecklist from "./components/EmergencyChecklist";
 
 export default function App() {
   const [records, setRecords] = useState<TroubleshootingRecord[]>([]);
@@ -179,9 +180,10 @@ export default function App() {
               />
             </div>
 
-            {/* Quick Reference */}
-            <div className="mt-6">
+            {/* Quick Reference + Emergency Checklist */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <QuickReference />
+              <EmergencyChecklist />
             </div>
           </div>
         </div>

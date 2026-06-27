@@ -230,13 +230,22 @@ export default function AiAssistant({ selectedRecord, onClearSelectedRecord, lan
               <div className="text-[10px] mt-2 opacity-60 text-right flex justify-between items-center">
                 <span>{msg.timestamp}</span>
                 {msg.sender === "assistant" && msg.id !== "welcome" && (
-                  <button 
-                    onClick={() => saveToVault(msg)} 
-                    className="ml-3 text-[#22d3ee] hover:text-white"
-                    title="Save to Vault"
-                  >
-                    <Bookmark className="w-3 h-3" />
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(msg.text)}
+                      className="text-[#22d3ee] hover:text-white"
+                      title="Copy"
+                    >
+                      Copy
+                    </button>
+                    <button 
+                      onClick={() => saveToVault(msg)} 
+                      className="text-[#22d3ee] hover:text-white"
+                      title="Save to Vault"
+                    >
+                      <Bookmark className="w-3 h-3" />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
