@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import QuickReference from "./components/QuickReference";
 import EmergencyChecklist from "./components/EmergencyChecklist";
+import MyVault from "./components/MyVault";
+import LOTOChecklist from "./components/LOTOChecklist";
+import FuelChangeover from "./components/FuelChangeover";
 
 export default function App() {
   const [records, setRecords] = useState<TroubleshootingRecord[]>([]);
@@ -197,6 +200,17 @@ export default function App() {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <QuickReference />
               <EmergencyChecklist />
+            </div>
+
+            {/* LOTO Checklist + Fuel Changeover */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <LOTOChecklist />
+              <FuelChangeover />
+            </div>
+
+            {/* My Saved AI Answers */}
+            <div className="mt-6">
+              <MyVault />
             </div>
           </div>
         </div>
