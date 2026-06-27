@@ -1,7 +1,7 @@
 {
   "name": "engineer-assistant",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "electron/main.cjs",
   "bin": "dist/server.cjs",
@@ -14,9 +14,9 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "electron:dev": "npm run build && electron electron/main.cjs",
-    "dist:win": "npm run build && electron-builder --win nsis portable",
-    "dist:linux": "npm run build && electron-builder --linux AppImage deb",
-    "dist:mac": "npm run build && electron-builder --mac dmg"
+    "dist:win": "npm run build && electron-builder --win nsis portable --publish never",
+    "dist:linux": "npm run build && electron-builder --linux AppImage deb --publish never",
+    "dist:mac": "npm run build && electron-builder --mac dmg --publish never"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -52,7 +52,10 @@
   },
   "productName": "Engineer Assistant",
   "description": "Professional desktop AI assistant for marine engineering troubleshooting, calculations, and offline knowledge.",
-  "author": "Mylittlestories",
+  "author": {
+    "name": "Mylittlestories",
+    "email": "noreply@example.com"
+  },
   "build": {
     "appId": "com.mylittlestories.engineerassistant",
     "productName": "Engineer Assistant",
@@ -73,27 +76,31 @@
         "nsis",
         "portable"
       ],
-      "artifactName": "--."
+      "artifactName": "Engineer-Assistant-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "artifactName": "Engineer-Assistant-Setup-${version}-${arch}.${ext}"
     },
     "linux": {
       "target": [
         "AppImage",
         "deb"
       ],
-      "category": "Education"
+      "category": "Education",
+      "maintainer": "Mylittlestories <noreply@example.com>",
+      "artifactName": "Engineer-Assistant-${version}-${arch}.${ext}"
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "category": "public.app-category.education"
+      "category": "public.app-category.education",
+      "artifactName": "Engineer-Assistant-${version}-${arch}.${ext}"
     }
   }
 }
