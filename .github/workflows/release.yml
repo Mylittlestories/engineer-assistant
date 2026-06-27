@@ -1,4 +1,4 @@
-name: Build and Release Engineer Assistant
+name: Build and Release Windows EXE
 
 on:
   push:
@@ -29,13 +29,13 @@ jobs:
       - name: Build desktop bundle
         run: npm run build:desktop
 
-      - name: Build Windows EXEs (NSIS + Portable)
+      - name: Build Windows EXEs (Installer + Portable)
         run: npm run dist:win
 
-      - name: Create GitHub Release + Upload EXEs
+      - name: Create GitHub Release + Upload EXE files
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN }}
           tag_name: ${{ github.ref_name }}
           name: Engineer Assistant ${{ github.ref_name }}
           draft: false
@@ -43,3 +43,4 @@ jobs:
           generate_release_notes: true
           files: |
             release/*.exe
+          overwrite: true
