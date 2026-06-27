@@ -1,4 +1,4 @@
-name: Build & Release (Windows Focus)
+name: Build and Release Engineer Assistant
 
 on:
   push:
@@ -10,14 +10,15 @@ permissions:
   contents: write
 
 jobs:
-  # ==================== WINDOWS (Main Deliverable) ====================
-  windows:
-    name: Build & Release Windows EXE
+  build-and-release:
+    name: Build + Release Windows EXE
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
@@ -28,15 +29,13 @@ jobs:
       - name: Build desktop bundle
         run: npm run build:desktop
 
-      - name: Build Windows installer + portable
+      - name: Build Windows EXEs (NSIS + Portable)
         run: npm run dist:win
 
-      - name: List built files
-        run: dir release
-
-      - name: Create GitHub Release + Attach EXE files
+      - name: Create GitHub Release + Upload EXEs
         uses: softprops/action-gh-release@v2
         with:
+          token: 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
           tag_name: ${{ github.ref_name }}
           name: Engineer Assistant ${{ github.ref_name }}
           draft: false
@@ -44,56 +43,3 @@ jobs:
           generate_release_notes: true
           files: |
             release/*.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # ==================== LINUX (Optional) ====================
-  linux:
-    name: Build Linux
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run build:desktop
-      - run: npm run dist:linux
-      - name: Upload Linux artifacts (optional)
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux
-          path: release/*
-          retention-days: 3
-
-  # ==================== ANDROID (Optional) ====================
-  android:
-    name: Build Android
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - uses: android-actions/setup-android@v3
-      - run: npm ci
-      - run: npm run android:sync
-      - name: Build APK
-        run: |
-          cd android && chmod +x ./gradlew && ./gradlew assembleDebug
-      - name: Prepare APK
-        run: |
-          mkdir -p release
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/Engineer-Assistant-Android-${{ github.ref_name }}.apk
-      - name: Upload Android
-        uses: actions/upload-artifact@v4
-        with:
-          name: android
-          path: release/*.apk
-          retention-days: 3
