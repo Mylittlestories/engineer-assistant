@@ -22,6 +22,14 @@ allprojects {
         google()
         mavenCentral()
     }
+
+    // Capacitor/Cordova dependency alignment for CI builds.
+    // Modern kotlin-stdlib already contains the old jdk7/jdk8 extension classes;
+    // excluding the legacy split artifacts prevents duplicate-class failures.
+    configurations.configureEach {
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+    }
 }
 
 task clean(type: Delete) {
