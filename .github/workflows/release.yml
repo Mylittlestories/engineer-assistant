@@ -1,4 +1,4 @@
-name: Build and Release Engineer Assistant
+name: Build & Release (Windows Focus)
 
 on:
   push:
@@ -10,26 +10,45 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
-    name: Build Windows EXE
+  # ==================== WINDOWS (Main Deliverable) ====================
+  windows:
+    name: Build & Release Windows EXE
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npm run build:desktop
-      - run: npm run dist:win
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-exes
-          path: release/*.exe
-          retention-days: 5
 
-  build-linux:
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build desktop bundle
+        run: npm run build:desktop
+
+      - name: Build Windows installer + portable
+        run: npm run dist:win
+
+      - name: List built files
+        run: dir release
+
+      - name: Create GitHub Release + Attach EXE files
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Engineer Assistant ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==================== LINUX (Optional) ====================
+  linux:
     name: Build Linux
     runs-on: ubuntu-latest
     steps:
@@ -41,14 +60,15 @@ jobs:
       - run: npm ci
       - run: npm run build:desktop
       - run: npm run dist:linux
-      - name: Upload Linux artifacts
+      - name: Upload Linux artifacts (optional)
         uses: actions/upload-artifact@v4
         with:
-          name: linux-artifacts
+          name: linux
           path: release/*
-          retention-days: 5
+          retention-days: 3
 
-  build-android:
+  # ==================== ANDROID (Optional) ====================
+  android:
     name: Build Android
     runs-on: ubuntu-latest
     steps:
@@ -71,44 +91,9 @@ jobs:
         run: |
           mkdir -p release
           cp android/app/build/outputs/apk/debug/app-debug.apk release/Engineer-Assistant-Android-${{ github.ref_name }}.apk
-      - name: Upload Android artifact
+      - name: Upload Android
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
+          name: android
           path: release/*.apk
-          retention-days: 5
-
-  # ==================== SINGLE RELEASE JOB ====================
-  create-release:
-    name: Create GitHub Release
-    needs: [build-windows, build-linux, build-android]
-    runs-on: ubuntu-latest
-    # Only run on version tags
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: downloaded-artifacts
-          merge-multiple: true
-
-      - name: List downloaded files
-        run: |
-          echo "=== Files ready for release ==="
-          find downloaded-artifacts -type f \( -name "*.exe" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.apk" \)
-
-      - name: Create Release and Attach Files
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: Engineer Assistant ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          files: |
-            downloaded-artifacts/*.exe
-            downloaded-artifacts/*.AppImage
-            downloaded-artifacts/*.deb
-            downloaded-artifacts/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          retention-days: 3
