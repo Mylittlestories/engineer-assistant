@@ -1,244 +1,269 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --color-brand-bg: #071524;
-  --color-panel-bg: #0e2035;
-  --color-sidebar-bg: #0a192a;
-  --color-card-bg: #142e4c;
-  --color-accent-cyan: #38bdf8;
-  --color-accent-cyan-dark: #0284c7;
-  
+:root {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  
+  /* Professional Marine Dark Theme */
+  --bg-primary: #0a111f;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1e293b;
+  --bg-card: #0f172a;
+  --bg-elevated: #1e293b;
+  
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --accent-cyan: #22d3ee;
+  --accent-cyan-dark: #06b6d4;
+  --accent-gold: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-green: #22c55e;
+  
+  --border: #334155;
+  --border-light: #475569;
 }
 
-/* Custom subtle scrollbar style for spreadsheet and tabs layout */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Light Ciel Theme */
+.theme-ciel {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-elevated: #f8fafc;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  
+  --accent-cyan: #0284c7;
+  --accent-cyan-dark: #0369a1;
+  --accent-gold: #b45309;
+  --accent-red: #dc2626;
+  --accent-green: #16a34a;
+  
+  --border: #cbd5e1;
+  --border-light: #e2e8f0;
 }
 
-::-webkit-scrollbar-track {
-  background: #071524;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(56, 189, 248, 0.25);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 189, 248, 0.55);
+/* Base Styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #475569 #1e293b;
 }
 
 body {
-  background-color: #071524;
-  color: #f1f5f9;
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
-/* ========================================================
-   STUNNING DAYLIGHT CIEL MARINE THEME (ECDIS-STUDIO STYLING)
-   ======================================================== */
-.theme-ciel, .theme-ciel body {
-  background-color: #f0f9ff !important;
-  color: #0f172a !important;
+/* Professional Typography */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-feature-settings: "tnum";
 }
 
-/* Ensure body element takes the background color of Ciel marine */
-body:has(.theme-ciel) {
-  background-color: #f0f9ff !important;
+.font-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum";
 }
 
-/* redefine Tailwind theme variable fallback for elements that use them */
-.theme-ciel {
-  --color-brand-bg: #f0f9ff !important;
-  --color-panel-bg: #ffffff !important;
-  --color-sidebar-bg: #f0f9ff !important;
-  --color-card-bg: #ffffff !important;
-  --color-accent-cyan: #0284c7 !important;
-  --color-accent-cyan-dark: #0369a1 !important;
+/* High-Contrast Professional Table */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-/* -------------------------------------------------------------
-   CARD & GENERAL BACKGROUND MAPS
-   Maps deep dark backgrounds to highly legible light-ciel elements
-   ------------------------------------------------------------- */
-.theme-ciel .bg-\[\#0a192a\],
-.theme-ciel .bg-\[\#0b1424\],
-.theme-ciel .bg-\[\#0c1524\],
-.theme-ciel .bg-\[\#0d1425\],
-.theme-ciel .bg-\[\#0e2035\],
-.theme-ciel .bg-\[\#142e4c\],
-.theme-ciel .bg-\[\#090f1d\],
-.theme-ciel .bg-slate-900,
-.theme-ciel .bg-slate-850,
-.theme-ciel .bg-slate-800,
-.theme-ciel .bg-\[\#111827\] {
-  background-color: #ffffff !important;
-  color: #1e293b !important;
-  border-color: #7dd3fc !important;
-  box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.05), 0 2px 4px -1px rgba(2, 132, 199, 0.03) !important;
+th {
+  font-weight: 600;
+  letter-spacing: 0.025em;
 }
 
-/* -------------------------------------------------------------
-   INNER WELLS, CHAT ITEMS, CODE BLOCKS & PRESETS
-   Maps near-black backgrounds to beautiful Alice / Sky Blue wells
-   ------------------------------------------------------------- */
-.theme-ciel .bg-\[\#010610\],
-.theme-ciel .bg-\[\#040a14\],
-.theme-ciel .bg-\[\#050a14\],
-.theme-ciel .bg-\[\#071324\],
-.theme-ciel .bg-\[\#11223b\],
-.theme-ciel .bg-slate-950,
-.theme-ciel .bg-slate-950\/40,
-.theme-ciel .bg-slate-950\/60,
-.theme-ciel .bg-slate-900\/60,
-.theme-ciel .bg-slate-900\/50,
-.theme-ciel .bg-slate-900\/20,
-.theme-ciel .bg-\[\#111827\]\/40,
-.theme-ciel .bg-slate-950\/20,
-.theme-ciel .bg-\[\#0e121a\] {
-  background-color: #f0f9ff !important;
-  color: #0369a1 !important;
-  border-color: #bae6fd !important;
+td, th {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
 }
 
-/* Specific text inputs or system messages overrides inside AI box or overhauls tab */
-.theme-ciel .bg-sky-950\/25,
-.theme-ciel .bg-sky-950\/20,
-.theme-ciel .bg-emerald-950,
-.theme-ciel .bg-amber-950,
-.theme-ciel .bg-rose-950,
-.theme-ciel .bg-red-950 {
-  background-color: #e0f2fe !important;
-  color: #0c4a6e !important;
+/* Modern Card & Panel System */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* -------------------------------------------------------------
-   BORDER OVERRIDES
-   Upgrades dark borders to glowing sea-breeze cyan/sky outlines
-   ------------------------------------------------------------- */
-.theme-ciel .border-slate-800,
-.theme-ciel .border-slate-850,
-.theme-ciel .border-slate-700,
-.theme-ciel .border-slate-600,
-.theme-ciel .border-sky-500\/10,
-.theme-ciel .border-sky-500\/20,
-.theme-ciel .border-sky-500\/25,
-.theme-ciel .border-sky-500\/30 {
-  border-color: #bae6fd !important;
+.panel {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
 }
 
-/* -------------------------------------------------------------
-   TEXT READABILITY AND CONTRAST ENHANCEMENTS
-   Converts hard-to-read dark theme texts into rich ocean slate
-   ------------------------------------------------------------- */
-.theme-ciel .text-slate-400,
-.theme-ciel .text-slate-450,
-.theme-ciel .text-sky-450,
-.theme-ciel .text-slate-350,
-.theme-ciel .text-slate-500 {
-  color: #0369a1 !important;
+/* Professional Navigation */
+.nav-tab {
+  position: relative;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.15s ease;
+  border-bottom: 3px solid transparent;
 }
 
-.theme-ciel .text-slate-350,
-.theme-ciel .text-slate-300,
-.theme-ciel .text-slate-200,
-.theme-ciel .text-slate-100 {
-  color: #1e293b !important;
+.nav-tab.active {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+  background-color: var(--bg-tertiary);
 }
 
-.theme-ciel .text-white {
-  color: #0f172a !important;
+.nav-tab:hover:not(.active) {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
-.theme-ciel .text-sky-400 {
-  color: #0284c7 !important;
+/* Button System */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  border-radius: 8px;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
-/* Keep accent highlights highly visible */
-.theme-ciel .text-\[\#dfb15b\],
-.theme-ciel .text-\[\#cca45c\] {
-  color: #1e40af !important; /* Elegant marine blue instead of gold for clarity */
+.btn-primary {
+  background-color: var(--accent-cyan);
+  color: #0a111f;
+  border: none;
 }
 
-/* -------------------------------------------------------------
-   HEADER & NAVIGATION BUTTONS
-   Maintains professional dark command panel header styled as ECDIS
-   ------------------------------------------------------------- */
-.theme-ciel header {
-  background-color: #072244 !important;
-  color: #ffffff !important;
-  border-bottom: 3px solid #0284c7 !important;
+.btn-primary:hover {
+  background-color: var(--accent-cyan-dark);
+  transform: translateY(-1px);
 }
 
-.theme-ciel header * {
-  color: #ffffff !important;
+.btn-secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
-.theme-ciel header .text-sky-400 {
-  color: #38bdf8 !important;
+.btn-secondary:hover {
+  background-color: var(--bg-elevated);
+  border-color: var(--border-light);
 }
 
-/* Navigation tabs & tab switcher row container */
-.theme-ciel nav {
-  background-color: #ffffff !important;
-  border-bottom: 2px solid #bae6fd !important;
+.btn-danger {
+  background-color: #450a0a;
+  color: #fecaca;
+  border: 1px solid #7f1d1d;
 }
 
-.theme-ciel nav button {
-  color: #475569 !important;
+.btn-danger:hover {
+  background-color: #7f1d1d;
 }
 
-.theme-ciel nav button.text-sky-400,
-.theme-ciel nav button.bg-slate-900 {
-  color: #0284c7 !important;
-  background-color: #e0f2fe !important;
-  border-bottom-color: #0284c7 !important;
+/* Input Styles */
+input, textarea, select {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  transition: all 0.15s ease;
 }
 
-/* -------------------------------------------------------------
-   FORMS, CONTROLS, SELECTS & BUTTONS
-   ------------------------------------------------------------- */
-.theme-ciel input[type="text"],
-.theme-ciel input[type="number"],
-.theme-ciel textarea,
-.theme-ciel select {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #bae6fd !important;
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
 }
 
-.theme-ciel input::placeholder {
-  color: #94a3b8 !important;
+/* Professional Modal */
+.modal {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
 }
 
-.theme-ciel button.bg-\[\#cca45c\],
-.theme-ciel button.bg-\[\#11223b\],
-.theme-ciel .bg-sky-500 {
-  background-color: #0284c7 !important;
-  color: #ffffff !important;
-  border-color: #0284c7 !important;
+/* Enhanced AI Chat */
+.chat-message {
+  max-width: 85%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  line-height: 1.5;
 }
 
-.theme-ciel button.bg-\[\#cca45c\]:hover,
-.theme-ciel .bg-sky-500:hover {
-  background-color: #0369a1 !important;
+.chat-message.assistant {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
 }
 
-/* Table rows styling specifically for marine lists */
-.theme-ciel tr:hover {
-  background-color: rgba(224, 242, 254, 0.4) !important;
+.chat-message.user {
+  background-color: #1e3a5f;
+  border: 1px solid #3b82f6;
+  align-self: flex-end;
 }
 
-.theme-ciel tbody tr {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
+/* Table Improvements */
+#excel-table td {
+  vertical-align: top;
 }
 
-.theme-ciel tbody tr:nth-child(even) {
-  background-color: #f8fafc !important;
+#excel-table tr:hover {
+  background-color: var(--bg-tertiary);
 }
 
+/* Status Badges */
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive improvements */
+@media (max-width: 1024px) {
+  .nav-tab {
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+}
+
+/* Accessibility & Readability */
+.markdown-body {
+  line-height: 1.65;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  font-weight: 700;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-body ul, .markdown-body ol {
+  padding-left: 1.25em;
+  margin: 0.75em 0;
+}
+
+/* Fix for light theme contrast */
+.theme-ciel .chat-message.assistant {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.theme-ciel .chat-message.user {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-color: #3b82f6;
+}
