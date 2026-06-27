@@ -1,4 +1,4 @@
-name: Build & Release Engineer Assistant
+name: Build and Release Engineer Assistant
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-windows:
-    name: Build Windows
+    name: Build Windows EXE
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,12 +22,12 @@ jobs:
       - run: npm ci
       - run: npm run build:desktop
       - run: npm run dist:win
-      - name: Upload Windows EXEs
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-exes
           path: release/*.exe
-          retention-days: 7
+          retention-days: 5
 
   build-linux:
     name: Build Linux
@@ -46,7 +46,7 @@ jobs:
         with:
           name: linux-artifacts
           path: release/*
-          retention-days: 7
+          retention-days: 5
 
   build-android:
     name: Build Android
@@ -64,39 +64,40 @@ jobs:
       - uses: android-actions/setup-android@v3
       - run: npm ci
       - run: npm run android:sync
-      - name: Build Android APK
+      - name: Build APK
         run: |
           cd android && chmod +x ./gradlew && ./gradlew assembleDebug
-      - name: Collect APK
+      - name: Prepare APK
         run: |
           mkdir -p release
           cp android/app/build/outputs/apk/debug/app-debug.apk release/Engineer-Assistant-Android-${{ github.ref_name }}.apk
-      - name: Upload Android
+      - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
           path: release/*.apk
-          retention-days: 7
+          retention-days: 5
 
-  # ==================== RELEASE ====================
-  release:
-    name: Create Release
+  # ==================== SINGLE RELEASE JOB ====================
+  create-release:
+    name: Create GitHub Release
     needs: [build-windows, build-linux, build-android]
     runs-on: ubuntu-latest
+    # Only run on version tags
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: Download all artifacts
+      - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
-          path: all-artifacts
+          path: downloaded-artifacts
           merge-multiple: true
 
-      - name: Show what we have
+      - name: List downloaded files
         run: |
-          echo "=== Files in all-artifacts ==="
-          find all-artifacts -type f | head -30
+          echo "=== Files ready for release ==="
+          find downloaded-artifacts -type f \( -name "*.exe" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.apk" \)
 
-      - name: Create GitHub Release
+      - name: Create Release and Attach Files
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -105,9 +106,9 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            all-artifacts/*.exe
-            all-artifacts/*.AppImage
-            all-artifacts/*.deb
-            all-artifacts/*.apk
+            downloaded-artifacts/*.exe
+            downloaded-artifacts/*.AppImage
+            downloaded-artifacts/*.deb
+            downloaded-artifacts/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
