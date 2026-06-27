@@ -124,6 +124,19 @@ export default function App() {
               <Settings className="w-4 h-4" />
               <span>AI</span>
             </button>
+
+            <button 
+              onClick={() => {
+                // Quick log new fault
+                const dbTab = document.querySelector('[data-tab="database"]') as HTMLElement;
+                if (dbTab) dbTab.click();
+                // Trigger add form via custom event or just alert for now
+                alert("Open the database and click 'Add Record' to log a new fault.");
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-[#22d3ee] text-[#0a111f] hover:bg-[#06b6d4] rounded-2xl text-sm font-medium transition-colors"
+            >
+              + Log Fault
+            </button>
           </div>
         </div>
       </header>
