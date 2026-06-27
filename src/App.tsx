@@ -11,7 +11,8 @@ import {
   Moon, 
   Sun, 
   Globe,
-  ShieldCheck
+  ShieldCheck,
+  Settings
 } from "lucide-react";
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [searchQuery, setSearchQuery] = useState("");
   const [showConverter, setShowConverter] = useState(false);
+  const [showAiSettings, setShowAiSettings] = useState(false);
 
   useEffect(() => {
     const cached = localStorage.getItem("marine_engine_db_records");
@@ -54,10 +56,23 @@ export default function App() {
     localStorage.setItem("marine_theme", newTheme);
   };
 
+  // Keyboard shortcut: Press "/" to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT") {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+        searchInput?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <div className={`min-h-screen flex flex-col font-sans ${theme === "light" ? "theme-light bg-[#f8fafc] text-slate-900" : "bg-[#0a111f] text-slate-200"}`}>
       
-      {/* Professional Header */}
+      {/* Header */}
       <header className="bg-[#0b1424] border-b border-slate-700 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -99,6 +114,11 @@ export default function App() {
               <ArrowLeftRight className="w-4 h-4" />
               <span>Converter</span>
             </button>
+
+            <button onClick={() => setShowAiSettings(true)} className="flex items-center gap-2 px-4 py-2 bg-[#11223b] hover:bg-[#1e293b] border border-slate-700 rounded-2xl text-sm">
+              <Settings className="w-4 h-4" />
+              <span>AI Key</span>
+            </button>
           </div>
         </div>
       </header>
@@ -107,7 +127,7 @@ export default function App() {
       <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* Database Section */}
+          {/* Database */}
           <div className="lg:col-span-7">
             <div className="flex items-center justify-between mb-4 px-1">
               <div>
@@ -175,6 +195,22 @@ export default function App() {
       {showConverter && (
         <div className="fixed bottom-6 right-6 w-[380px] z-50 shadow-2xl">
           <UnitConverter language={language} isWidgetMode onCloseWidget={() => setShowConverter(false)} />
+        </div>
+      )}
+
+      {/* AI Settings Modal */}
+      {showAiSettings && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <div className="bg-[#0b1424] border border-slate-700 rounded-2xl w-full max-w-md p-6">
+            <div className="flex justify-between mb-4">
+              <div className="font-semibold">AI Configuration</div>
+              <button onClick={() => setShowAiSettings(false)}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="text-sm text-slate-300">
+              To use the online AI, please open the <strong>Chief Engineer AI</strong> panel and click the settings icon (gear) inside it to configure your Gemini API key.
+            </div>
+            <button onClick={() => setShowAiSettings(false)} className="mt-6 w-full py-3 border border-slate-700 rounded-2xl">Close</button>
+          </div>
         </div>
       )}
     </div>
