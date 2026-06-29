@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-and-release:
-    name: Build + Release Windows EXE
+    name: Build Windows + Create Release
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -32,7 +32,7 @@ jobs:
       - name: Build Windows EXEs
         run: npm run dist:win
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
