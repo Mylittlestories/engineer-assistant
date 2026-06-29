@@ -20,6 +20,7 @@ import EmergencyChecklist from "./components/EmergencyChecklist";
 import MyVault from "./components/MyVault";
 import LOTOChecklist from "./components/LOTOChecklist";
 import FuelChangeover from "./components/FuelChangeover";
+import ShiftHandover from "./components/ShiftHandover";
 
 export default function App() {
   const [records, setRecords] = useState<TroubleshootingRecord[]>([]);
@@ -208,9 +209,10 @@ export default function App() {
               <FuelChangeover />
             </div>
 
-            {/* My Saved AI Answers */}
-            <div className="mt-6">
+            {/* My Saved AI Answers + Shift Handover */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <MyVault />
+              <ShiftHandover />
             </div>
           </div>
         </div>
