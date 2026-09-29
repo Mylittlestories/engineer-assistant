@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Professional Marine Engineering Toolkit</strong><br />
-  Calm Material Design offline-first troubleshooting, safety checklists, calculators, PDF.js manual vault, static GitHub Pages Browser Gemini AI, and desktop/server Gemini AI for shipboard use.
+  Mobile-first real troubleshooting, offline expert diagnostic packs, safety checklists, calculators, PDF.js manual vault, static GitHub Pages Browser Gemini AI, and desktop/server Gemini AI for shipboard use.
 </p>
 
 <p align="center">
@@ -17,12 +17,14 @@
 
 ## What it does
 
+- **Real Troubleshooting Mode:** enter equipment, alarm, symptom, readings, recent work, and checks already done; the app builds a safe diagnostic path without requiring a large PDF upload.
+- Offline expert diagnostic packs for main engine, diesel generators, purifiers, pumps, compressors, boilers, electrical/automation, and general first-principles faults.
 - Searchable offline troubleshooting database for propulsion engines, generators, fuel systems, pumps, separators, and safety-critical alarms.
 - Chief Engineer AI panel with three modes:
   - **Browser Gemini mode for GitHub Pages:** the user enters their own Gemini API key in the app; the key is stored only in that browser's local storage.
   - **Desktop/server mode:** uses Gemini through the local Node API when a backend key is configured.
   - **Offline database mode:** no internet or key required; answers are matched from the onboard records.
-- Mobile-first calm Material Design UI with a compact top bar, bottom navigation on phones, clear Start/Faults/AI/Tools screens, quick search, category filters, and safety-first fault cards.
+- Mobile-first real troubleshooting UI with a compact top bar, bottom navigation on phones, a primary Fix workflow, quick fault search, guided diagnostic plans, and safety-first fault cards.
 - Unit converter for pressure, temperature, viscosity, and torque.
 - LOTO and quick-reference panels.
 - PDF.js-powered manual/PDF text extraction in the static web app.
@@ -50,7 +52,7 @@ PDF.js is bundled into the static build, so PDF manuals can be uploaded and conv
 
 ## Live web app on GitHub Pages
 
-The first screen is now a mobile-first start page that asks “What do you need right now?” and offers four clear paths: Faults, AI, Manuals/PDF vault, and Tools. On phones the navigation is a fixed bottom bar so the header no longer wraps into a pile of buttons.
+The first screen is now the Fix workflow: enter equipment, alarm, symptoms, readings, recent work, and checks already done. The app builds a safe diagnostic path without requiring a PDF upload; manuals are optional for exact maker limits and procedures.
 
 
 This repository includes a GitHub Actions workflow that builds and deploys the static PWA to GitHub Pages.
@@ -84,13 +86,13 @@ The release workflow builds downloadable desktop packages:
 2. Create and push a version tag, for example:
 
    ```bash
-   git tag v2.2.0
-   git push origin v2.2.0
+   git tag v2.3.0
+   git push origin v2.3.0
    ```
 
 3. The **Build Desktop Apps** workflow will build all platforms and attach the files to a GitHub Release.
 
-You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.2.0`.
+You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.3.0`.
 
 ## Local development
 

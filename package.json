@@ -1,7 +1,7 @@
 {
   "name": "engineer-assistant",
   "private": true,
-  "version": "2.2.0",
+  "version": "2.3.0",
   "type": "module",
   "main": "electron/main.cjs",
   "bin": "dist/server.cjs",
@@ -68,7 +68,7 @@
     "protobufjs@7.6.2": true
   },
   "productName": "Engineer Assistant",
-  "description": "Mobile-first offline marine engineering assistant with Browser Gemini AI, PDF.js manual vault, troubleshooting, safety/PTW, logbook, PMS, spares, reports, emergency mode, training, and desktop releases.",
+  "description": "Mobile-first real troubleshooting assistant for marine engineers with offline expert packs, Browser Gemini AI, PDF.js manual vault, safety/PTW, reports, and desktop releases.",
   "author": {
     "name": "Mylittlestories",
     "email": "noreply@example.com"

@@ -100,7 +100,7 @@ export function calculateChemicalDoseLiters(volumeM3: number, ppmDose: number, c
 export function buildBackup(payload: Record<string, unknown>) {
   return JSON.stringify({
     app: "Engineer Assistant",
-    version: "2.2.0",
+    version: "2.0.0",
     exportedAt: new Date().toISOString(),
     ...payload
   }, null, 2);

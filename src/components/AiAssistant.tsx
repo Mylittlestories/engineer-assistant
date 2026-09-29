@@ -29,6 +29,8 @@ interface AiAssistantProps {
   onClearSelectedRecord: () => void;
   language: "EN" | "GR";
   offlineRecords: any[];
+  initialPrompt?: string;
+  onInitialPromptConsumed?: () => void;
 }
 
 type ChatMessage = {
@@ -139,7 +141,7 @@ function buildOfflineAdvice(prompt: string, selectedRecord: any, offlineRecords:
   return `### Offline advisor mode${reasonText}\n\nI matched your question against the onboard troubleshooting database. Use this as a shipboard checklist and always verify maker-specific limits in the vessel manual.\n\n**Matched equipment:** ${primary.category || "Marine machinery"}\n**Make / model:** ${primary.makeModel || "Not specified"}\n**Component:** ${primary.component || "Not specified"}\n**Symptom:** ${primary.faultSymptom || prompt}\n\n#### Immediate safety actions\n${bulletList(primary.safetyPrecautions, "Apply LOTO, verify zero energy, and wait for hot or pressurized parts to cool/depressurize before inspection.")}\n\n#### Likely causes to check\n${bulletList(primary.possibleCauses, "Compare actual readings against trend history and maker limits.")}\n\n#### Step-by-step checks\n${bulletList(primary.troubleshootingSteps, "Start with visual checks, confirm sensor readings locally, then isolate one cause at a time.")}\n\n${related.length ? `#### Related database matches\n${related.map(record => `- **${record.component}** — ${record.faultSymptom}`).join("\n")}\n\n` : ""}#### When to stop\n- Stop work and escalate to the Chief Engineer, superintendent, or OEM if readings are outside safe limits, if a crankcase/scavenge/fire risk exists, or if high-pressure fuel/hydraulic leakage is suspected.`;
 }
 
-export default function AiAssistant({ selectedRecord, onClearSelectedRecord, language, offlineRecords }: AiAssistantProps) {
+export default function AiAssistant({ selectedRecord, onClearSelectedRecord, language, offlineRecords, initialPrompt = "", onInitialPromptConsumed }: AiAssistantProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -165,6 +167,22 @@ export default function AiAssistant({ selectedRecord, onClearSelectedRecord, lan
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(() => { scrollToBottom(); }, [messages]);
+
+  useEffect(() => {
+    const prompt = initialPrompt.trim();
+    if (!prompt) return;
+    setInput(prompt);
+    setMessages(prev => {
+      if (prev.some(message => message.id === "troubleshooting-prefill")) return prev;
+      return [...prev, {
+        id: "troubleshooting-prefill",
+        sender: "assistant",
+        text: "I loaded your troubleshooting case into the message box. Review it, add any missing readings, then press Send.",
+        timestamp: nowTime()
+      }];
+    });
+    onInitialPromptConsumed?.();
+  }, [initialPrompt, onInitialPromptConsumed]);
 
   useEffect(() => {
     let active = true;

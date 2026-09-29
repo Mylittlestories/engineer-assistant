@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.0
+
+- Added Real Troubleshooting Mode on the first screen: structured equipment, alarm, symptom, readings, recent work, and checked-items input.
+- Added offline expert diagnostic packs for main engine, diesel generators, purifiers, pumps, compressors, boilers, electrical/automation, and general first-principles faults.
+- The assistant now builds a safe diagnostic path without needing large PDF uploads: safety actions, missing questions, likely causes, proof checks, stop/escalate criteria, manual data needed, logbook draft, defect draft, and an AI-ready case prompt.
+- Simplified the start page further around one primary workflow, with direct shortcuts only for known fault cards, AI, manuals/PDF, and unit conversion.
+- Kept static GitHub Pages Browser Gemini, PDF.js manual extraction, PWA/offline support, app icons, and desktop packaging.
+
 ## 2.2.0
 
 - Rebuilt the app shell again as a mobile-first workflow instead of a wrapped dashboard: compact top bar, fixed bottom navigation on phones, and clear Start/Faults/AI/Tools screens.

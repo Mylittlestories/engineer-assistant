@@ -6,6 +6,7 @@ import AiAssistant from "./components/AiAssistant";
 import { UnitConverter } from "./components/UnitConverter";
 import EngineerSuite from "./components/EngineerSuite";
 import PwaInstallPrompt from "./components/PwaInstallPrompt";
+import RealTroubleshooter from "./components/RealTroubleshooter";
 import {
   AlertTriangle,
   ArrowLeftRight,
@@ -26,7 +27,7 @@ import {
 
 const RECORDS_STORAGE_KEY = "marine_engine_db_records";
 const THEME_STORAGE_KEY = "marine_theme_v2_2";
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.3.0";
 const STATIC_PAGE_URL = "https://mylittlestories.github.io/engineer-assistant/";
 const RELEASE_URL = "https://github.com/Mylittlestories/engineer-assistant/releases/latest";
 
@@ -41,8 +42,8 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { id: "home", label: "Start", shortLabel: "Start", icon: Home, helper: "Choose what you need" },
-  { id: "database", label: "Faults", shortLabel: "Faults", icon: Database, helper: "Find causes and checks" },
+  { id: "home", label: "Fix", shortLabel: "Fix", icon: Home, helper: "Troubleshoot now" },
+  { id: "database", label: "Faults", shortLabel: "Faults", icon: Database, helper: "Find known faults" },
   { id: "ai", label: "AI", shortLabel: "AI", icon: Bot, helper: "Ask with context" },
   { id: "suite", label: "Tools", shortLabel: "Tools", icon: Wrench, helper: "Manuals, PMS, reports" },
 ];
@@ -133,6 +134,7 @@ export default function App() {
   const [activeView, setActiveView] = useState<AppView>("home");
   const [searchQuery, setSearchQuery] = useState("");
   const [homeSearch, setHomeSearch] = useState("");
+  const [aiPrefill, setAiPrefill] = useState("");
   const [showUnitConverter, setShowUnitConverter] = useState(false);
 
   useEffect(() => {
@@ -188,88 +190,39 @@ export default function App() {
 
   const renderHome = () => (
     <div className="ea-stack">
-      <section className="ea-start-panel">
-        <div className="ea-start-copy">
-          <div className="ea-eyebrow"><ShieldCheck className="h-4 w-4" /> Simple shipboard workflow</div>
-          <h1>What do you need right now?</h1>
-          <p>
-            A clean, mobile-first assistant for faults, AI guidance, manuals, safety, PMS, spares, logs, reports and emergency checklists.
-          </p>
+      <RealTroubleshooter
+        records={records}
+        onOpenFaults={(query) => searchFaults(query)}
+        onAskAi={(prompt) => { setAiPrefill(prompt); goToView("ai"); }}
+      />
 
-          <form onSubmit={submitHomeSearch} className="ea-search-panel">
-            <Search className="h-5 w-5" />
-            <input
-              value={homeSearch}
-              onChange={(event) => setHomeSearch(event.target.value)}
-              placeholder="Search: oil mist, generator hunting, purifier, scavenge fire..."
-            />
-            <button type="submit">Search</button>
-          </form>
-
-          <div className="ea-suggestion-row" aria-label="Common searches">
-            {["oil mist", "blackout", "generator hunting", "purifier water"].map(example => (
-              <button key={example} type="button" onClick={() => searchFaults(example)}>{example}</button>
-            ))}
-          </div>
-        </div>
-
-        <div className="ea-identity-card">
-          <img src="icons/icon-192.png" alt="Engineer Assistant icon" />
-          <strong>Engineer Assistant</strong>
-          <span>v{APP_VERSION}</span>
-          <a href={STATIC_PAGE_URL} className="ea-button ea-button-primary"><Download className="h-4 w-4" /> Open static app</a>
-        </div>
-      </section>
-
-      <section className="ea-action-grid" aria-label="Main app actions">
-        <QuickAction
-          icon={Database}
-          title="Troubleshoot a fault"
-          text="Search alarms, components and symptoms. Open a compact card with causes, safety and checklist steps."
-          action="Open faults"
-          onClick={() => goToView("database")}
-        />
-        <QuickAction
-          icon={Bot}
-          title="Ask Chief Engineer AI"
-          text="Use Browser Gemini on GitHub Pages, desktop Gemini, or offline database advice when no key is saved."
-          action="Open AI"
-          onClick={() => goToView("ai")}
-          tone="ai"
-        />
-        <QuickAction
-          icon={BookOpen}
-          title="Manuals and PDF vault"
-          text="Upload PDF manuals with PDF.js, save excerpts locally, and use them as cited context for AI."
-          action="Open manuals"
-          onClick={() => goToView("suite")}
-          tone="safe"
-        />
-        <QuickAction
-          icon={AlertTriangle}
-          title="Emergency and safety"
-          text="Fast access to blackout, scavenge fire, crankcase risk, steering, PTW and LOTO guidance."
-          action="Open tools"
-          onClick={() => goToView("suite")}
-          tone="warn"
-        />
-      </section>
-
-      <section className="ea-status-grid" aria-label="App status">
-        <MiniStatus icon={Database} value={records.length} label="fault records" />
-        <MiniStatus icon={BookOpen} value="PDF.js" label="manual extraction" />
-        <MiniStatus icon={ShieldCheck} value="Offline" label="PWA ready" />
-        <MiniStatus icon={ShipWheel} value="Desktop" label="Windows, Linux, macOS" />
+      <section className="ea-simple-actions" aria-label="Direct actions">
+        <button type="button" onClick={() => goToView("database")}>
+          <Database className="h-5 w-5" />
+          <span><strong>Known fault cards</strong><small>Browse built-in cases</small></span>
+        </button>
+        <button type="button" onClick={() => goToView("ai")}>
+          <Bot className="h-5 w-5" />
+          <span><strong>Ask AI</strong><small>Use case context or general question</small></span>
+        </button>
+        <button type="button" onClick={() => goToView("suite")}>
+          <BookOpen className="h-5 w-5" />
+          <span><strong>Manuals / PDF</strong><small>Optional exact maker data</small></span>
+        </button>
+        <button type="button" onClick={() => setShowUnitConverter(true)}>
+          <ArrowLeftRight className="h-5 w-5" />
+          <span><strong>Unit converter</strong><small>Pressure, temp, torque</small></span>
+        </button>
       </section>
 
       <section className="ea-card ea-row-card">
         <div>
-          <h2>Install or download</h2>
-          <p>Use it in the browser, install it as a PWA, or download a desktop app from GitHub Releases.</p>
+          <h2>Use manuals only when needed</h2>
+          <p>The app can build a troubleshooting path from symptoms, readings, trends and recent work. Upload PDFs only for exact maker limits, reset steps, torque values and citations.</p>
         </div>
         <div className="ea-row-actions">
           <a href={STATIC_PAGE_URL} className="ea-button ea-button-secondary"><Home className="h-4 w-4" /> Static page</a>
-          <a href={RELEASE_URL} className="ea-button ea-button-primary"><Download className="h-4 w-4" /> Releases</a>
+          <a href={RELEASE_URL} className="ea-button ea-button-primary"><Download className="h-4 w-4" /> Downloads</a>
         </div>
       </section>
     </div>
@@ -336,6 +289,8 @@ export default function App() {
           onClearSelectedRecord={() => setSelectedRecordForAi(null)}
           language="EN"
           offlineRecords={records}
+          initialPrompt={aiPrefill}
+          onInitialPromptConsumed={() => setAiPrefill("")}
         />
       </section>
     </div>
