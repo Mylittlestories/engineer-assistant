@@ -2,8 +2,20 @@ node_modules/
 dist/
 release/
 .env
-.env.local
+.env.*
+!.env.example
 *.log
 .DS_Store
+
+# Generated/bundled server artifacts
+server.cjs
+server.cjs.map
+server.js
+server.js.map
+
+# Local tooling caches
+.vite/
+.cache/
+coverage/
 
 assets/

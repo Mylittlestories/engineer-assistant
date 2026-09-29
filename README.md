@@ -1,120 +1,155 @@
 # Engineer Assistant
 
 **Professional Marine Engineering Toolkit**  
-A clean, fast, and powerful offline-first application built for marine engineers working in engine rooms.
+Offline-first troubleshooting, safety checklists, calculators, static GitHub Pages Browser Gemini AI, and desktop/server Gemini AI for shipboard use.
 
----
+## What it does
 
-## What is Engineer Assistant?
+- Searchable offline troubleshooting database for propulsion engines, generators, fuel systems, pumps, separators, and safety-critical alarms.
+- Chief Engineer AI panel with three modes:
+  - **Browser Gemini mode for GitHub Pages:** the user enters their own Gemini API key in the app; the key is stored only in that browser's local storage.
+  - **Desktop/server mode:** uses Gemini through the local Node API when a backend key is configured.
+  - **Offline database mode:** no internet or key required; answers are matched from the onboard records.
+- Friendlier card-based UI with quick search, category filters, safety-first fault cards, and sticky AI assistant.
+- Unit converter for pressure, temperature, viscosity, and torque.
+- LOTO and quick-reference panels.
+- PWA support for installable/offline browser use.
+- Electron desktop packaging for Windows, Linux, and macOS.
+- Proper app icons for web/PWA, Windows, macOS, Linux, and Android launcher assets.
 
-Engineer Assistant is a **practical, professional tool** designed specifically for marine engineers. It combines:
+Professional Engineer Suite modules include manual vault, guided troubleshooting trees, safety/PTW checklists, watch logbook, PMS planner, spare parts inventory, alarm decoder, defect reports, photo evidence, backup/restore, ship profile, emergency mode, training, and technical language helper.
 
-- A searchable offline troubleshooting database
-- A powerful AI assistant (Chief Engineer AI)
-- Engineering calculators and converters
-- Fully offline operation (no internet required after setup)
+## AI on static GitHub Pages
 
----
+GitHub Pages cannot run a private Node backend, so the static site cannot safely use a repository-stored secret. The implemented solution is **Browser Gemini**:
 
-## Key Features
+1. Deploy the static PWA to GitHub Pages.
+2. Open the app.
+3. Click the **AI Settings** gear in the AI panel.
+4. Paste your own Gemini API key from Google AI Studio.
+5. Ask questions normally.
 
-| Feature                    | Description                                              |
-|---------------------------|----------------------------------------------------------|
-| **Troubleshooting Database** | Searchable records for 2-stroke, 4-stroke, and auxiliary machinery |
-| **Chief Engineer AI**     | AI-powered diagnostic support with offline fallback       |
-| **Unit Converter**        | Pressure, temperature, viscosity, torque conversions     |
-| **Offline Mode**          | Works completely without internet                        |
-| **Save & Export**         | Save AI answers and export records to Excel              |
+The key is saved only in that browser with `localStorage`. It is not committed to the repo and is not added to the build artifact.
 
----
+> Security note: browser-side Gemini is convenient for personal/static use, but the key is still visible to that browser session. For a public production app, restrict the key by HTTP referrer in Google Cloud, monitor quotas, or use Firebase AI Logic / a private backend.
 
-## How to Use
+## Live web app on GitHub Pages
 
-### 1. Getting Started
+This repository includes a GitHub Actions workflow that builds and deploys the static PWA to GitHub Pages.
 
-1. Download the latest version from the [Releases page](https://github.com/Mylittlestories/engineer-assistant/releases)
-2. Run the installer or portable `.exe`
-3. The app works **immediately** in offline mode
+### Enable Pages once
 
-### 2. Main Interface
+1. Open the repository on GitHub.
+2. Go to **Settings → Pages**.
+3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+4. Push to `main`/`master`, or run **Deploy GitHub Pages** manually from the Actions tab.
 
-- **Global Search Bar** — Type anywhere to search the database
-- **Troubleshooting Database** (left side) — Browse and manage records
-- **Chief Engineer AI** (right side) — Your main diagnostic assistant
-- **Keyboard Shortcut** — Press `/` to instantly focus the search bar
+After deployment, the app will be available at:
 
-### 3. Using the AI Assistant
+```text
+https://mylittlestories.github.io/engineer-assistant/
+```
 
-1. Click on any record → **"AI Advise"** button, or
-2. Type your question directly in the AI chat
-3. The AI will use both online knowledge and your local database
+## Desktop executables
 
-**Recommended prompts:**
-- "What are the most common causes?"
-- "Give me the safety checklist"
-- "Walk me through troubleshooting steps"
+The release workflow builds downloadable desktop packages:
 
-### 4. Configuring Online AI (Recommended)
+| Platform | Output |
+| --- | --- |
+| Windows | NSIS installer `.exe` and portable `.exe` |
+| Linux | `.AppImage` and `.deb` |
+| macOS | Universal `.dmg` |
 
-For the best experience, configure a **Gemini API key**:
+### Create a release from GitHub Actions
 
-1. Open the **Chief Engineer AI** panel
-2. Click the **gear icon** (Settings)
-3. Paste your Gemini API key
-4. Save
+1. Commit the changes.
+2. Create and push a version tag, for example:
 
-> Get a free API key at [Google AI Studio](https://aistudio.google.com/app/apikey)
+   ```bash
+   git tag v2.0.0
+   git push origin v2.0.0
+   ```
 
-### 5. Saving Important Answers
+3. The **Build Desktop Apps** workflow will build all platforms and attach the files to a GitHub Release.
 
-While chatting with the AI:
-- Click the **bookmark icon** on any AI response
-- The answer is saved to your personal **Offline Lessons Vault**
+You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.0.0`.
 
-### 6. Exporting Data
+## Local development
 
-- Click **Export Excel** in the database to download all records
-- Use **Print** in the AI chat to create physical notes
+Requirements:
 
----
+- Node.js **22.12.0 or newer**
+- npm 10+
 
-## Offline Capabilities
+```bash
+npm ci
+npm run dev
+```
 
-The app is designed to work **completely offline**:
+Open the local URL printed in the terminal.
 
-- All troubleshooting records are stored locally
-- AI has smart offline fallback responses
-- Unit converter works without internet
-- Your saved answers and settings are preserved
+## Useful commands
 
----
+```bash
+npm run lint          # Type-check
+npm run build:web     # Build the static web/PWA app
+npm run build:pages   # Build GitHub Pages artifact with 404 fallback and .nojekyll
+npm run build         # Build web app + Node server bundle
+npm run start         # Start the production Node server from dist/
+npm run electron:dev  # Build and launch Electron locally
+npm run dist:win      # Build Windows installer + portable EXE
+npm run dist:linux    # Build Linux AppImage + DEB
+npm run dist:mac      # Build universal macOS DMG
+npm run clean         # Remove generated artifacts
+```
 
-## Tips for Marine Engineers
+## Configure Gemini AI in desktop/server mode
 
-- Use the **global search** when you have a symptom but don’t know the component
-- Always check the **Safety** section in record details before any work
-- Save useful AI answers to the **Vault** for future reference
-- Use the **Converter** floating button when working with different units
-- Press `/` to quickly search while working
+### Option 1: In-app settings
 
----
+1. Open the desktop/server build.
+2. Click the **AI Settings** gear in the AI panel.
+3. Paste your Gemini API key in the desktop/server section and save.
 
-## Technical Information
+The desktop app stores the key in the OS app-data directory, not in the repository.
 
-- **Version**: 1.4.0
-- **Fully Offline** after first run
-- **Windows** supported (Installer + Portable)
-- **No data sent** without your consent
+### Option 2: Environment variable
 
----
+Create `.env.local` or `.env` locally:
 
-## Support
+```bash
+GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.5-flash
+```
 
-This tool was built to help marine engineers work safer and faster.
+Then run:
 
-For issues or suggestions, please open an issue on GitHub.
+```bash
+npm run build
+npm run start
+```
 
----
+## Using a separate API backend with the static frontend
 
-**Built with respect for the profession.**  
-*For the men and women who keep ships moving.*
+If you deploy the Node server elsewhere and want the GitHub Pages frontend to call it, build with:
+
+```bash
+VITE_API_BASE_URL=https://your-api.example.com npm run build:pages
+```
+
+Set the backend environment variable `ALLOWED_ORIGINS` so the server permits the Pages origin, for example:
+
+```bash
+ALLOWED_ORIGINS=https://mylittlestories.github.io
+```
+
+## Security and safety notes
+
+- GitHub Pages builds do **not** store or ship a private Gemini key.
+- Browser Gemini stores a user-supplied key only in that user's browser local storage.
+- Electron uses `contextIsolation`, renderer sandboxing, a local loopback API server, and restricted external navigation.
+- The app is a decision-support tool. Always verify exact limits, torque values, clearances, alarms, and procedures against the vessel-specific maker manual and company SMS.
+
+## License
+
+See [LICENSE](LICENSE).

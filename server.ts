@@ -100,8 +100,38 @@ function getStaticDistPath(isCompiled: boolean) {
   return path.join(process.cwd(), "dist");
 }
 
+function getAllowedOrigins() {
+  return (process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map(origin => origin.trim())
+    .filter(Boolean);
+}
+
 export async function createApp(): Promise<Express> {
   const app = express();
+  app.disable("x-powered-by");
+
+  app.use((req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+
+    const origin = req.headers.origin;
+    const allowedOrigins = getAllowedOrigins();
+    if (origin && (allowedOrigins.includes("*") || allowedOrigins.includes(origin))) {
+      res.setHeader("Access-Control-Allow-Origin", allowedOrigins.includes("*") ? "*" : origin);
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+      res.setHeader("Vary", "Origin");
+    }
+
+    if (req.method === "OPTIONS") {
+      res.status(204).end();
+      return;
+    }
+
+    next();
+  });
+
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/api/health", (_req, res) => {
@@ -138,7 +168,7 @@ export async function createApp(): Promise<Express> {
   // AI Troubleshooting endpoint
   app.post("/api/troubleshoot", async (req, res) => {
     try {
-      const { prompt, chatHistory, selectedRecord } = req.body;
+      const { prompt, chatHistory, selectedRecord, manualContext, shipProfileContext } = req.body;
       if (!prompt || typeof prompt !== "string") {
         return res.status(400).json({ error: "Prompt is required." });
       }
@@ -189,9 +219,14 @@ Provide helpful advice, diagnostic reasoning, component functions, visual indica
         }
       }
 
+      const extraContext = [
+        typeof manualContext === "string" && manualContext.trim() ? `Relevant uploaded manual excerpts:\n${manualContext.slice(0, 12000)}` : "",
+        typeof shipProfileContext === "string" && shipProfileContext.trim() ? `Vessel profile context:\n${shipProfileContext.slice(0, 4000)}` : "",
+      ].filter(Boolean).join("\n\n");
+
       const fullPrompt = selectedRecord
-        ? `${databaseContext}\n\nUser Question/Action: ${prompt}`
-        : `User Question: ${prompt}`;
+        ? `${databaseContext}${extraContext ? `\n\n${extraContext}` : ""}\n\nUser Question/Action: ${prompt}`
+        : `${extraContext ? `${extraContext}\n\n` : ""}User Question: ${prompt}`;
 
       contents.push({ role: "user", parts: [{ text: fullPrompt }] });
 
@@ -213,12 +248,17 @@ Provide helpful advice, diagnostic reasoning, component functions, visual indica
   });
 
   const isCompiled = typeof (process as any).pkg !== "undefined";
-  const isDev = process.env.NODE_ENV !== "production" && !isCompiled;
+  const invokedPath = process.argv[1] || "";
+  const isSourceRuntime = /server\.ts$/.test(invokedPath);
+  const isDev = process.env.NODE_ENV !== "production" && !isCompiled && isSourceRuntime;
 
   if (isDev) {
     const { createServer } = await import("vite");
     const vite = await createServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        allowedHosts: true,
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);

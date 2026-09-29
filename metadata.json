@@ -1,6 +1,6 @@
 {
-  "name": "DRV Engineer Assistant",
-  "description": "Comprehensive offline-ready shipboard tool with full 2-stroke/4-stroke schematics, MARPOL compliance, Ballast Water Treatment systems (BWTS), and AI Chief Advisor helper.",
+  "name": "Engineer Assistant",
+  "description": "Offline-first marine engineering assistant with static GitHub Pages Browser Gemini AI, desktop Gemini backend, manual vault, guided troubleshooting, safety/PTW, logbook, PMS, spares, reports, emergency mode, training, and calculators.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API", "BROWSER_GEMINI_STATIC_PWA", "OFFLINE_FIRST_SHIPBOARD_TOOLKIT"]
 }

@@ -4,8 +4,21 @@ const path = require('path');
 let mainWindow;
 let serverHandle;
 
+const ALLOWED_EXTERNAL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
+
 function getDistDir() {
   return app.isPackaged ? path.join(process.resourcesPath, 'dist') : path.join(__dirname, '..', 'dist');
+}
+
+function openExternalSafely(url) {
+  try {
+    const parsed = new URL(url);
+    if (ALLOWED_EXTERNAL_PROTOCOLS.has(parsed.protocol)) {
+      shell.openExternal(url);
+    }
+  } catch {
+    // Ignore malformed navigation attempts.
+  }
 }
 
 async function bootLocalServer() {
@@ -34,20 +47,31 @@ async function createMainWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      webSecurity: true,
     },
   });
 
+  mainWindow.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) => {
+    callback(false);
+  });
+
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    openExternalSafely(url);
     return { action: 'deny' };
   });
 
   mainWindow.webContents.on('will-navigate', (event, url) => {
     const localUrl = `http://127.0.0.1:${serverHandle.port}`;
-    if (!url.startsWith(localUrl)) {
-      event.preventDefault();
-      shell.openExternal(url);
+    if (url === localUrl || url.startsWith(`${localUrl}/`)) {
+      return;
     }
+
+    event.preventDefault();
+    openExternalSafely(url);
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = undefined;
   });
 
   await mainWindow.loadURL(`http://127.0.0.1:${serverHandle.port}`);

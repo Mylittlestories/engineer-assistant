@@ -87,3 +87,97 @@ button:hover {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+
+/* Markdown rendered inside AI responses */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  font-weight: 700;
+  margin: 0.65rem 0 0.35rem;
+  color: #e0f2fe;
+}
+
+.markdown-body h3 {
+  font-size: 0.95rem;
+}
+
+.markdown-body p {
+  margin: 0.35rem 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 0.35rem 0 0.35rem 1rem;
+}
+
+.markdown-body li {
+  margin: 0.18rem 0;
+}
+
+.markdown-body strong {
+  color: #bae6fd;
+}
+
+.markdown-body code {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(51, 65, 85, 0.8);
+  border-radius: 0.35rem;
+  padding: 0.05rem 0.25rem;
+  font-size: 0.78rem;
+}
+
+.theme-light .markdown-body h1,
+.theme-light .markdown-body h2,
+.theme-light .markdown-body h3,
+.theme-light .markdown-body h4,
+.theme-light .markdown-body strong {
+  color: #0369a1;
+}
+
+.app-hero {
+  background:
+    linear-gradient(135deg, rgba(7, 21, 36, 0.98), rgba(11, 32, 54, 0.94)),
+    radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.16), transparent 34%);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.theme-light header,
+.theme-light footer {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  color: #0f172a;
+}
+
+.theme-light .app-hero {
+  background:
+    linear-gradient(135deg, #0f2741, #075985),
+    radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.2), transparent 34%);
+  color: #f8fafc;
+}
+
+.theme-light .bg-\[\#071524\],
+.theme-light .bg-\[\#0f1d33\] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.theme-light .text-slate-100,
+.theme-light .text-slate-200,
+.theme-light .text-white {
+  color: #0f172a !important;
+}
+
+.theme-light .text-slate-300,
+.theme-light .text-slate-400,
+.theme-light .text-slate-500 {
+  color: #475569 !important;
+}
+
+.theme-light .app-hero .text-white {
+  color: #f8fafc !important;
+}
+
+.theme-light .app-hero .text-slate-300,
+.theme-light .app-hero .text-slate-400 {
+  color: #cbd5e1 !important;
+}
