@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0
+
+- Rebuilt the app shell again as a mobile-first workflow instead of a wrapped dashboard: compact top bar, fixed bottom navigation on phones, and clear Start/Faults/AI/Tools screens.
+- Simplified the first screen around the question “What do you need right now?” with search, four clear actions, and install/download links.
+- Reduced oversized mobile typography, removed header/menu pile-ups, and added calmer module overrides so fault cards, AI, PDF manuals, and engineer tools remain readable.
+- Kept static GitHub Pages Browser Gemini mode, PDF.js manual extraction, PWA/offline support, app icons, and desktop packaging.
+
 ## 2.1.0
 
 ### Changed

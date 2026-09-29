@@ -1,6 +1,6 @@
 {
   "name": "Engineer Assistant",
-  "description": "Calm Material Design offline-first marine engineering assistant with static GitHub Pages Browser Gemini AI, PDF.js manual vault, desktop Gemini backend, guided troubleshooting, safety/PTW, logbook, PMS, spares, reports, emergency mode, training, and calculators.",
+  "description": "Mobile-first, offline-first marine engineering assistant with static GitHub Pages Browser Gemini AI, PDF.js manual vault, desktop Gemini backend, guided troubleshooting, safety/PTW, logbook, PMS, spares, reports, emergency mode, training, and calculators.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API",

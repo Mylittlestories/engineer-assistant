@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { troubleshootingDatabase } from "./database";
 import { TroubleshootingRecord } from "./types";
 import ExcelDashboard from "./components/ExcelDashboard";
@@ -11,10 +11,10 @@ import {
   ArrowLeftRight,
   Bot,
   BookOpen,
+  CheckCircle2,
   Database,
   Download,
   Home,
-  Menu,
   Moon,
   Search,
   ShieldCheck,
@@ -25,11 +25,27 @@ import {
 } from "lucide-react";
 
 const RECORDS_STORAGE_KEY = "marine_engine_db_records";
-const THEME_STORAGE_KEY = "marine_theme";
-const APP_VERSION = "2.1.0";
+const THEME_STORAGE_KEY = "marine_theme_v2_2";
+const APP_VERSION = "2.2.0";
 const STATIC_PAGE_URL = "https://mylittlestories.github.io/engineer-assistant/";
+const RELEASE_URL = "https://github.com/Mylittlestories/engineer-assistant/releases/latest";
 
 type AppView = "home" | "database" | "ai" | "suite";
+
+type NavItem = {
+  id: AppView;
+  label: string;
+  shortLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+  helper: string;
+};
+
+const navItems: NavItem[] = [
+  { id: "home", label: "Start", shortLabel: "Start", icon: Home, helper: "Choose what you need" },
+  { id: "database", label: "Faults", shortLabel: "Faults", icon: Database, helper: "Find causes and checks" },
+  { id: "ai", label: "AI", shortLabel: "AI", icon: Bot, helper: "Ask with context" },
+  { id: "suite", label: "Tools", shortLabel: "Tools", icon: Wrench, helper: "Manuals, PMS, reports" },
+];
 
 function loadStoredRecords(): TroubleshootingRecord[] {
   try {
@@ -59,40 +75,53 @@ function loadStoredTheme(): "dark" | "light" {
   }
 }
 
-function FeatureCard({ icon: Icon, title, text, action, onClick, accent = "cyan" }: {
-  icon: React.ComponentType<any>;
+function safeScrollTop() {
+  window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+}
+
+function PageHeading({ eyebrow, title, text, icon: Icon }: {
+  eyebrow: string;
+  title: string;
+  text: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <div className="ea-page-heading">
+      <div className="ea-eyebrow"><Icon className="h-4 w-4" /> {eyebrow}</div>
+      <h1>{title}</h1>
+      <p>{text}</p>
+    </div>
+  );
+}
+
+function QuickAction({ icon: Icon, title, text, action, onClick, tone = "default" }: {
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   text: string;
   action: string;
   onClick: () => void;
-  accent?: "cyan" | "emerald" | "amber" | "blue" | "red";
+  tone?: "default" | "safe" | "warn" | "ai";
 }) {
-  const accentClass = {
-    cyan: "md-icon-cyan",
-    emerald: "md-icon-emerald",
-    amber: "md-icon-amber",
-    blue: "md-icon-blue",
-    red: "md-icon-red",
-  }[accent];
-
   return (
-    <button onClick={onClick} className="md-feature-card text-left">
-      <div className={`md-feature-icon ${accentClass}`}><Icon className="w-5 h-5" /></div>
-      <div className="font-semibold text-slate-900 dark:text-slate-100">{title}</div>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{text}</p>
-      <div className="mt-4 text-sm font-bold text-sky-700 dark:text-cyan-300">{action}</div>
+    <button type="button" onClick={onClick} className={`ea-quick-card ea-tone-${tone}`}>
+      <span className="ea-quick-icon"><Icon className="h-5 w-5" /></span>
+      <span className="ea-quick-title">{title}</span>
+      <span className="ea-quick-text">{text}</span>
+      <span className="ea-quick-action">{action}</span>
     </button>
   );
 }
 
-function StatCard({ label, value, icon: Icon }: { label: string; value: string | number; icon: React.ComponentType<any> }) {
+function MiniStatus({ icon: Icon, value, label }: {
+  icon: React.ComponentType<{ className?: string }>;
+  value: string | number;
+  label: string;
+}) {
   return (
-    <div className="md-stat-card">
-      <Icon className="w-5 h-5 text-sky-600" />
-      <div>
-        <div className="text-2xl font-black text-slate-900 dark:text-white">{value}</div>
-        <div className="text-xs text-slate-500 dark:text-slate-400">{label}</div>
-      </div>
+    <div className="ea-mini-status">
+      <Icon className="h-4 w-4" />
+      <strong>{value}</strong>
+      <span>{label}</span>
     </div>
   );
 }
@@ -103,8 +132,8 @@ export default function App() {
   const [theme, setTheme] = useState<"dark" | "light">(() => loadStoredTheme());
   const [activeView, setActiveView] = useState<AppView>("home");
   const [searchQuery, setSearchQuery] = useState("");
+  const [homeSearch, setHomeSearch] = useState("");
   const [showUnitConverter, setShowUnitConverter] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     persistRecords(records);
@@ -118,8 +147,14 @@ export default function App() {
     }
   }, [theme]);
 
-  const handleThemeToggle = () => {
-    setTheme(current => current === "dark" ? "light" : "dark");
+  const currentView = useMemo(
+    () => navItems.find(item => item.id === activeView) || navItems[0],
+    [activeView]
+  );
+
+  const goToView = (view: AppView) => {
+    setActiveView(view);
+    safeScrollTop();
   };
 
   const handleAddRecord = (record: TroubleshootingRecord) => {
@@ -137,103 +172,123 @@ export default function App() {
 
   const openAiWithRecord = (record: TroubleshootingRecord) => {
     setSelectedRecordForAi(record);
-    setActiveView("ai");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    goToView("ai");
   };
 
-  const navItems: Array<{ id: AppView; label: string; icon: React.ComponentType<any> }> = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "database", label: "Faults", icon: Database },
-    { id: "ai", label: "AI", icon: Bot },
-    { id: "suite", label: "Engineer Suite", icon: Wrench },
-  ];
+  const searchFaults = (query: string) => {
+    setSearchQuery(query.trim());
+    setHomeSearch(query.trim());
+    goToView("database");
+  };
 
-  const navButton = (item: typeof navItems[number]) => {
-    const Icon = item.icon;
-    const active = activeView === item.id;
-    return (
-      <button
-        key={item.id}
-        onClick={() => { setActiveView(item.id); setMobileMenuOpen(false); }}
-        className={`md-nav-pill ${active ? "md-nav-pill-active" : ""}`}
-      >
-        <Icon className="w-4 h-4" /> {item.label}
-      </button>
-    );
+  const submitHomeSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    searchFaults(homeSearch);
   };
 
   const renderHome = () => (
-    <div className="space-y-6">
-      <section className="md-hero-card">
-        <div className="md-hero-content">
-          <div className="md-chip"><ShieldCheck className="w-4 h-4" /> Offline-first • GitHub Pages • Desktop apps</div>
-          <h1>Marine engineering help without the clutter.</h1>
+    <div className="ea-stack">
+      <section className="ea-start-panel">
+        <div className="ea-start-copy">
+          <div className="ea-eyebrow"><ShieldCheck className="h-4 w-4" /> Simple shipboard workflow</div>
+          <h1>What do you need right now?</h1>
           <p>
-            Start with a fault, ask the Chief Engineer AI, open a PDF manual vault, or jump into daily shipboard tools. Calm screens, large actions, and safety-first guidance.
+            A clean, mobile-first assistant for faults, AI guidance, manuals, safety, PMS, spares, logs, reports and emergency checklists.
           </p>
-          <div className="md-command-bar">
-            <Search className="w-5 h-5 text-slate-400" />
+
+          <form onSubmit={submitHomeSearch} className="ea-search-panel">
+            <Search className="h-5 w-5" />
             <input
-              type="text"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              onFocus={() => setActiveView("database")}
-              placeholder="Search oil mist, scavenge fire, generator hunting, purifier water carry-over..."
+              value={homeSearch}
+              onChange={(event) => setHomeSearch(event.target.value)}
+              placeholder="Search: oil mist, generator hunting, purifier, scavenge fire..."
             />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button onClick={() => setActiveView("database")} className="md-primary-button"><Database className="w-4 h-4" /> Troubleshoot a fault</button>
-            <button onClick={() => setActiveView("ai")} className="md-secondary-button"><Bot className="w-4 h-4" /> Ask AI</button>
-            <button onClick={() => setActiveView("suite")} className="md-secondary-button"><BookOpen className="w-4 h-4" /> Manuals & tools</button>
+            <button type="submit">Search</button>
+          </form>
+
+          <div className="ea-suggestion-row" aria-label="Common searches">
+            {["oil mist", "blackout", "generator hunting", "purifier water"].map(example => (
+              <button key={example} type="button" onClick={() => searchFaults(example)}>{example}</button>
+            ))}
           </div>
         </div>
-        <div className="md-hero-panel">
-          <img src="icons/icon-192.png" alt="Engineer Assistant icon" className="w-24 h-24 rounded-[1.75rem] shadow-xl" />
-          <div className="text-center">
-            <div className="text-xl font-black text-slate-900 dark:text-white">Engineer Assistant</div>
-            <div className="text-sm text-slate-500 dark:text-slate-400">v{APP_VERSION}</div>
-          </div>
-          <a href={STATIC_PAGE_URL} className="md-primary-button w-full justify-center"><Download className="w-4 h-4" /> Static web app</a>
+
+        <div className="ea-identity-card">
+          <img src="icons/icon-192.png" alt="Engineer Assistant icon" />
+          <strong>Engineer Assistant</strong>
+          <span>v{APP_VERSION}</span>
+          <a href={STATIC_PAGE_URL} className="ea-button ea-button-primary"><Download className="h-4 w-4" /> Open static app</a>
         </div>
       </section>
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="offline records" value={records.length} icon={Database} />
-        <StatCard label="AI modes" value="3" icon={Bot} />
-        <StatCard label="PDF.js manuals" value="Yes" icon={BookOpen} />
-        <StatCard label="safety-first" value="LOTO" icon={ShieldCheck} />
+      <section className="ea-action-grid" aria-label="Main app actions">
+        <QuickAction
+          icon={Database}
+          title="Troubleshoot a fault"
+          text="Search alarms, components and symptoms. Open a compact card with causes, safety and checklist steps."
+          action="Open faults"
+          onClick={() => goToView("database")}
+        />
+        <QuickAction
+          icon={Bot}
+          title="Ask Chief Engineer AI"
+          text="Use Browser Gemini on GitHub Pages, desktop Gemini, or offline database advice when no key is saved."
+          action="Open AI"
+          onClick={() => goToView("ai")}
+          tone="ai"
+        />
+        <QuickAction
+          icon={BookOpen}
+          title="Manuals and PDF vault"
+          text="Upload PDF manuals with PDF.js, save excerpts locally, and use them as cited context for AI."
+          action="Open manuals"
+          onClick={() => goToView("suite")}
+          tone="safe"
+        />
+        <QuickAction
+          icon={AlertTriangle}
+          title="Emergency and safety"
+          text="Fast access to blackout, scavenge fire, crankcase risk, steering, PTW and LOTO guidance."
+          action="Open tools"
+          onClick={() => goToView("suite")}
+          tone="warn"
+        />
       </section>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <FeatureCard icon={Database} title="Fault finding" text="Browse clear machinery cards with causes, safety actions, and checklists." action="Open faults" onClick={() => setActiveView("database")} accent="blue" />
-        <FeatureCard icon={Bot} title="Chief Engineer AI" text="Use Browser Gemini on static pages, desktop Gemini, or offline database guidance." action="Open AI" onClick={() => setActiveView("ai")} accent="cyan" />
-        <FeatureCard icon={BookOpen} title="Manual vault" text="Upload PDFs with PDF.js, search excerpts, and feed relevant text to AI." action="Open manuals" onClick={() => setActiveView("suite")} accent="emerald" />
-        <FeatureCard icon={AlertTriangle} title="Emergency mode" text="Blackout, scavenge fire, crankcase risk, steering failure and more." action="Open suite" onClick={() => setActiveView("suite")} accent="red" />
+      <section className="ea-status-grid" aria-label="App status">
+        <MiniStatus icon={Database} value={records.length} label="fault records" />
+        <MiniStatus icon={BookOpen} value="PDF.js" label="manual extraction" />
+        <MiniStatus icon={ShieldCheck} value="Offline" label="PWA ready" />
+        <MiniStatus icon={ShipWheel} value="Desktop" label="Windows, Linux, macOS" />
       </section>
 
-      <section className="md-surface-card p-5 md:p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Daily engineer workflow</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">One clean place for watch handover, PMS, spares, defect reports, photos, calculators and backup.</p>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button onClick={() => setShowUnitConverter(true)} className="md-secondary-button"><ArrowLeftRight className="w-4 h-4" /> Unit converter</button>
-            <button onClick={() => setActiveView("suite")} className="md-primary-button"><Wrench className="w-4 h-4" /> Engineer Suite</button>
-          </div>
+      <section className="ea-card ea-row-card">
+        <div>
+          <h2>Install or download</h2>
+          <p>Use it in the browser, install it as a PWA, or download a desktop app from GitHub Releases.</p>
+        </div>
+        <div className="ea-row-actions">
+          <a href={STATIC_PAGE_URL} className="ea-button ea-button-secondary"><Home className="h-4 w-4" /> Static page</a>
+          <a href={RELEASE_URL} className="ea-button ea-button-primary"><Download className="h-4 w-4" /> Releases</a>
         </div>
       </section>
     </div>
   );
 
   const renderDatabase = () => (
-    <section className="md-page-grid">
-      <div className="md-section-heading md-page-main">
-        <div className="md-chip"><Database className="w-4 h-4" /> Troubleshooting database</div>
-        <h1>Choose a fault card</h1>
-        <p>Search by symptom, component, maker, alarm text, or safety action. Tap “Ask AI” to focus the assistant on that fault.</p>
-      </div>
-      <div className="md-page-main md-surface-card overflow-hidden">
+    <div className="ea-stack">
+      <PageHeading
+        icon={Database}
+        eyebrow="Fault database"
+        title="Find the fault, then act safely."
+        text="Use short searches. Tap a card for likely causes, immediate safety points, checklist steps, or focused AI help."
+      />
+      <form onSubmit={(event) => event.preventDefault()} className="ea-card ea-search-panel ea-search-sticky">
+        <Search className="h-5 w-5" />
+        <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search fault, alarm, maker, component or symptom..." />
+        {searchQuery && <button type="button" onClick={() => setSearchQuery("")}>Clear</button>}
+      </form>
+      <section className="ea-module-card ea-compact-scope">
         <ExcelDashboard
           records={records}
           onAddRecord={handleAddRecord}
@@ -245,113 +300,128 @@ export default function App() {
           language="EN"
           externalSearch={searchQuery}
         />
-      </div>
-      <aside className="md-page-side space-y-4">
-        <div className="md-surface-card p-5">
-          <h3 className="font-bold text-slate-900 dark:text-white">Fast search</h3>
-          <div className="md-command-bar mt-3">
-            <Search className="w-5 h-5 text-slate-400" />
-            <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search faults..." />
-          </div>
-        </div>
-        <div className="md-surface-card p-5">
-          <h3 className="font-bold text-slate-900 dark:text-white">Safety reminder</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">Verify LOTO, pressure release, hot surface cooling, and maker limits before any hands-on inspection.</p>
-        </div>
-      </aside>
-    </section>
+      </section>
+    </div>
   );
 
   const renderAi = () => (
-    <section className="md-page-grid">
-      <div className="md-section-heading md-page-main">
-        <div className="md-chip"><Bot className="w-4 h-4" /> Chief Engineer AI</div>
-        <h1>Ask clearly. Verify safely.</h1>
-        <p>AI uses selected fault records, PDF/manual vault snippets, and ship profile context when available. Exact values must still come from the vessel manual.</p>
-      </div>
-      <div className="md-page-main md-surface-card overflow-hidden h-[720px]">
+    <div className="ea-stack">
+      <PageHeading
+        icon={Bot}
+        eyebrow="Chief Engineer AI"
+        title="Ask one clear question."
+        text="Give equipment, alarm text, readings, recent work and what you checked. AI is support only — verify all limits in the vessel manual."
+      />
+      {selectedRecordForAi ? (
+        <section className="ea-card ea-focus-card">
+          <div>
+            <span>Focused fault</span>
+            <strong>{selectedRecordForAi.component}</strong>
+            <p>{selectedRecordForAi.faultSymptom}</p>
+          </div>
+          <button type="button" onClick={() => setSelectedRecordForAi(null)} className="ea-button ea-button-secondary">Clear</button>
+        </section>
+      ) : (
+        <section className="ea-card ea-row-card">
+          <div>
+            <h2>No fault selected</h2>
+            <p>Open Faults and tap “Ask AI”, or ask a general engineering question below.</p>
+          </div>
+          <button type="button" onClick={() => goToView("database")} className="ea-button ea-button-primary">Find a fault</button>
+        </section>
+      )}
+      <section className="ea-ai-card ea-compact-scope">
         <AiAssistant
           selectedRecord={selectedRecordForAi}
           onClearSelectedRecord={() => setSelectedRecordForAi(null)}
           language="EN"
           offlineRecords={records}
         />
-      </div>
-      <aside className="md-page-side space-y-4">
-        {selectedRecordForAi ? (
-          <div className="md-surface-card p-5 border-sky-200 dark:border-cyan-900">
-            <div className="text-xs font-bold uppercase tracking-wide text-sky-700 dark:text-cyan-300">AI focus</div>
-            <h3 className="font-bold text-slate-900 dark:text-white mt-2">{selectedRecordForAi.component}</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">{selectedRecordForAi.faultSymptom}</p>
-            <button onClick={() => setSelectedRecordForAi(null)} className="md-secondary-button mt-4 w-full justify-center">Clear focus</button>
-          </div>
-        ) : (
-          <div className="md-surface-card p-5">
-            <h3 className="font-bold text-slate-900 dark:text-white">No focused fault</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">Open the fault database and tap a card, or ask a general engineering question.</p>
-            <button onClick={() => setActiveView("database")} className="md-primary-button mt-4 w-full justify-center">Find a fault</button>
-          </div>
-        )}
-        <div className="md-surface-card p-5">
-          <h3 className="font-bold text-slate-900 dark:text-white">Good prompt format</h3>
-          <ul className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-400">
-            <li>1. Equipment and maker</li>
-            <li>2. Alarm text and readings</li>
-            <li>3. Recent work or fuel change</li>
-            <li>4. What you already checked</li>
-          </ul>
-        </div>
-      </aside>
-    </section>
+      </section>
+    </div>
+  );
+
+  const renderSuite = () => (
+    <div className="ea-stack">
+      <PageHeading
+        icon={Wrench}
+        eyebrow="Engineer tools"
+        title="Manuals, safety, logs and reports."
+        text="A single offline shipboard workspace. Pick the tool tab you need; everything saves locally and can be exported."
+      />
+      <section className="ea-module-card ea-suite-card ea-compact-scope">
+        <EngineerSuite />
+      </section>
+    </div>
   );
 
   return (
-    <div className={`md-app min-h-screen flex flex-col font-sans ${theme === "dark" ? "dark theme-dark" : "theme-light"}`}>
-      <header className="md-topbar">
-        <div className="md-topbar-inner">
-          <button onClick={() => setActiveView("home")} className="md-brand">
-            <img src="icons/icon-192.png" alt="Engineer Assistant" />
+    <div className={`ea-app min-h-screen font-sans ${theme === "dark" ? "dark theme-dark" : "theme-light"}`}>
+      <header className="ea-topbar">
+        <div className="ea-topbar-row">
+          <button type="button" onClick={() => goToView("home")} className="ea-brand" aria-label="Go to start">
+            <img src="icons/icon-192.png" alt="" />
             <span>
               <strong>Engineer Assistant</strong>
-              <small>Marine engineering toolkit</small>
+              <small>{currentView.helper}</small>
             </span>
           </button>
 
-          <nav className="hidden lg:flex items-center gap-2">
-            {navItems.map(navButton)}
+          <nav className="ea-desktop-nav" aria-label="Main navigation">
+            {navItems.map(item => {
+              const Icon = item.icon;
+              const active = item.id === activeView;
+              return (
+                <button key={item.id} type="button" onClick={() => goToView(item.id)} className={active ? "active" : ""}>
+                  <Icon className="h-4 w-4" /> {item.label}
+                </button>
+              );
+            })}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <button onClick={handleThemeToggle} className="md-icon-button" title="Toggle theme">
-              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          <div className="ea-top-actions">
+            <button type="button" onClick={() => setShowUnitConverter(true)} className="ea-icon-action" title="Unit converter" aria-label="Unit converter">
+              <ArrowLeftRight className="h-5 w-5" />
             </button>
-            <button onClick={() => setShowUnitConverter(true)} className="hidden sm:inline-flex md-icon-button" title="Unit converter"><ArrowLeftRight className="w-5 h-5" /></button>
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden md-icon-button" title="Menu"><Menu className="w-5 h-5" /></button>
+            <button type="button" onClick={() => setTheme(current => current === "dark" ? "light" : "dark")} className="ea-icon-action" title="Toggle theme" aria-label="Toggle theme">
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
           </div>
         </div>
-        {mobileMenuOpen && (
-          <div className="md-mobile-nav">
-            {navItems.map(navButton)}
-          </div>
-        )}
       </header>
 
-      <main className="flex-1 md-shell">
+      <main className="ea-main">
+        <div className="ea-mobile-view-title">
+          <currentView.icon className="h-4 w-4" /> {currentView.label}
+        </div>
         {activeView === "home" && renderHome()}
         {activeView === "database" && renderDatabase()}
         {activeView === "ai" && renderAi()}
-        {activeView === "suite" && <EngineerSuite />}
+        {activeView === "suite" && renderSuite()}
       </main>
 
+      <nav className="ea-bottom-nav" aria-label="Mobile navigation">
+        {navItems.map(item => {
+          const Icon = item.icon;
+          const active = item.id === activeView;
+          return (
+            <button key={item.id} type="button" onClick={() => goToView(item.id)} className={active ? "active" : ""}>
+              <Icon className="h-5 w-5" />
+              <span>{item.shortLabel}</span>
+            </button>
+          );
+        })}
+      </nav>
+
       {showUnitConverter && (
-        <div className="fixed inset-0 z-[90] bg-slate-950/60 backdrop-blur-sm p-3 md:p-8 flex items-center justify-center">
-          <div className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#071524] shadow-2xl">
+        <div className="ea-modal" role="dialog" aria-modal="true" aria-label="Unit converter">
+          <div className="ea-modal-card ea-compact-scope">
             <button
               onClick={() => setShowUnitConverter(false)}
-              className="absolute right-3 top-3 z-10 md-icon-button bg-white/90 dark:bg-[#11223b]"
+              className="ea-modal-close"
               aria-label="Close unit converter"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
             <UnitConverter language="EN" />
           </div>
@@ -360,14 +430,11 @@ export default function App() {
 
       <PwaInstallPrompt />
 
-      <footer className="md-footer">
-        <div className="md-footer-inner">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-sky-600" />
-            <span>SOLAS • MARPOL • STCW aware • Offline-first decision support</span>
-          </div>
-          <div>v{APP_VERSION} — GitHub Pages, PWA, and Desktop ready</div>
+      <footer className="ea-footer">
+        <div>
+          <CheckCircle2 className="h-4 w-4" /> Offline-first decision support • v{APP_VERSION}
         </div>
+        <span>SOLAS • MARPOL • STCW aware</span>
       </footer>
     </div>
   );

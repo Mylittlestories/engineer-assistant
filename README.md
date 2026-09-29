@@ -22,7 +22,7 @@
   - **Browser Gemini mode for GitHub Pages:** the user enters their own Gemini API key in the app; the key is stored only in that browser's local storage.
   - **Desktop/server mode:** uses Gemini through the local Node API when a backend key is configured.
   - **Offline database mode:** no internet or key required; answers are matched from the onboard records.
-- Calm Material Design UI with a simple home page, large action cards, quick search, category filters, safety-first fault cards, and sticky AI assistant.
+- Mobile-first calm Material Design UI with a compact top bar, bottom navigation on phones, clear Start/Faults/AI/Tools screens, quick search, category filters, and safety-first fault cards.
 - Unit converter for pressure, temperature, viscosity, and torque.
 - LOTO and quick-reference panels.
 - PDF.js-powered manual/PDF text extraction in the static web app.
@@ -50,7 +50,7 @@ PDF.js is bundled into the static build, so PDF manuals can be uploaded and conv
 
 ## Live web app on GitHub Pages
 
-The first screen is now a calm Material Design dashboard with large actions for Faults, AI, Manual Vault / PDF.js, and Engineer Suite instead of showing every module at once.
+The first screen is now a mobile-first start page that asks “What do you need right now?” and offers four clear paths: Faults, AI, Manuals/PDF vault, and Tools. On phones the navigation is a fixed bottom bar so the header no longer wraps into a pile of buttons.
 
 
 This repository includes a GitHub Actions workflow that builds and deploys the static PWA to GitHub Pages.
@@ -84,13 +84,13 @@ The release workflow builds downloadable desktop packages:
 2. Create and push a version tag, for example:
 
    ```bash
-   git tag v2.1.0
-   git push origin v2.1.0
+   git tag v2.2.0
+   git push origin v2.2.0
    ```
 
 3. The **Build Desktop Apps** workflow will build all platforms and attach the files to a GitHub Release.
 
-You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.1.0`.
+You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.2.0`.
 
 ## Local development
 

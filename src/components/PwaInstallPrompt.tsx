@@ -50,33 +50,26 @@ export default function PwaInstallPrompt() {
   if (dismissed && isOnline) return null;
 
   return (
-    <div className="fixed bottom-3 left-3 right-3 md:left-auto md:right-4 md:max-w-sm z-[80] pointer-events-none">
-      <div className="pointer-events-auto rounded-xl border border-[#cca45c]/40 bg-[#071524]/95 shadow-2xl backdrop-blur p-3 text-slate-100 flex gap-3 items-start">
-        <div className={`mt-0.5 rounded-lg p-2 ${isOnline ? "bg-emerald-950/60 text-emerald-300" : "bg-red-950/70 text-red-300"}`}>
-          {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
+    <div className="ea-pwa-toast" role="status" aria-live="polite">
+      <div className="ea-pwa-card">
+        <div className={`ea-pwa-icon ${isOnline ? "online" : "offline"}`}>
+          {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#dfb15b]">
-            <Smartphone className="w-3.5 h-3.5" />
-            Shipboard Offline Ready
-          </div>
-          <p className="text-[11px] text-slate-300 leading-relaxed mt-1">
+        <div className="ea-pwa-copy">
+          <strong><Smartphone className="h-3.5 w-3.5" /> Shipboard offline ready</strong>
+          <span>
             {isOnline
-              ? "Install this app on Android/desktop as a PWA. Core database, lessons, and adaptive memory remain available offline."
-              : "Offline mode active. The app will use local records and learned lessons until internet returns."}
-          </p>
-          {installPrompt && isOnline && (
-            <button
-              onClick={handleInstall}
-              className="mt-2 inline-flex items-center gap-1.5 rounded bg-[#cca45c] px-3 py-1.5 text-[10px] font-bold uppercase text-slate-950 hover:bg-[#dfb15b]"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Install App
-            </button>
-          )}
+              ? "Install as a PWA; core tools stay available offline."
+              : "Offline mode active. Local records remain available."}
+          </span>
         </div>
-        <button onClick={dismiss} className="text-slate-500 hover:text-white">
-          <X className="w-4 h-4" />
+        {installPrompt && isOnline && (
+          <button onClick={handleInstall} className="ea-pwa-install">
+            <Download className="h-3.5 w-3.5" /> Install
+          </button>
+        )}
+        <button onClick={dismiss} className="ea-pwa-close" aria-label="Dismiss install prompt">
+          <X className="h-4 w-4" />
         </button>
       </div>
     </div>
