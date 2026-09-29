@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.0
+
+- Added a dedicated top-level Manuals page so PDF/manual upload is easy to find and no longer hidden inside the engineer tools.
+- Rebuilt the manual vault upload flow with one clear “Choose PDF / text file” action, better PDF.js status messages, scanned/protected PDF warnings, browser storage quota handling, manual search, and saved-section management.
+- Simplified navigation to Fix, Manuals, Faults, AI, and More across desktop and mobile.
+- Refined typography and card styling for a more consistent look across the static page and desktop app.
+- Kept Real Troubleshooting Mode, static GitHub Pages Browser Gemini, PDF.js local extraction, PWA/offline support, app icons, and desktop packaging.
+
 ## 2.3.0
 
 - Added Real Troubleshooting Mode on the first screen: structured equipment, alarm, symptom, readings, recent work, and checked-items input.

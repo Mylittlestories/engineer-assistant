@@ -1,7 +1,7 @@
 {
   "name": "Engineer Assistant",
   "short_name": "Engineer AI",
-  "description": "Mobile-first real troubleshooting assistant for marine engineers with offline expert packs, Browser Gemini AI, PDF.js manual vault, and desktop releases.",
+  "description": "Refined mobile-first marine troubleshooting assistant with easy navigation, dedicated PDF manual vault, offline expert packs, Browser Gemini AI, and desktop releases.",
   "id": ".",
   "start_url": ".",
   "scope": ".",

@@ -7,6 +7,7 @@ import { UnitConverter } from "./components/UnitConverter";
 import EngineerSuite from "./components/EngineerSuite";
 import PwaInstallPrompt from "./components/PwaInstallPrompt";
 import RealTroubleshooter from "./components/RealTroubleshooter";
+import ManualVault from "./components/ManualVault";
 import {
   AlertTriangle,
   ArrowLeftRight,
@@ -27,11 +28,11 @@ import {
 
 const RECORDS_STORAGE_KEY = "marine_engine_db_records";
 const THEME_STORAGE_KEY = "marine_theme_v2_2";
-const APP_VERSION = "2.3.0";
+const APP_VERSION = "2.4.0";
 const STATIC_PAGE_URL = "https://mylittlestories.github.io/engineer-assistant/";
 const RELEASE_URL = "https://github.com/Mylittlestories/engineer-assistant/releases/latest";
 
-type AppView = "home" | "database" | "ai" | "suite";
+type AppView = "home" | "manuals" | "database" | "ai" | "suite";
 
 type NavItem = {
   id: AppView;
@@ -43,9 +44,10 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { id: "home", label: "Fix", shortLabel: "Fix", icon: Home, helper: "Troubleshoot now" },
-  { id: "database", label: "Faults", shortLabel: "Faults", icon: Database, helper: "Find known faults" },
+  { id: "manuals", label: "Manuals", shortLabel: "Manuals", icon: BookOpen, helper: "PDF and maker data" },
+  { id: "database", label: "Faults", shortLabel: "Faults", icon: Database, helper: "Known fault cards" },
   { id: "ai", label: "AI", shortLabel: "AI", icon: Bot, helper: "Ask with context" },
-  { id: "suite", label: "Tools", shortLabel: "Tools", icon: Wrench, helper: "Manuals, PMS, reports" },
+  { id: "suite", label: "More", shortLabel: "More", icon: Wrench, helper: "PMS, reports, emergency" },
 ];
 
 function loadStoredRecords(): TroubleshootingRecord[] {
@@ -205,9 +207,9 @@ export default function App() {
           <Bot className="h-5 w-5" />
           <span><strong>Ask AI</strong><small>Use case context or general question</small></span>
         </button>
-        <button type="button" onClick={() => goToView("suite")}>
+        <button type="button" onClick={() => goToView("manuals")}>
           <BookOpen className="h-5 w-5" />
-          <span><strong>Manuals / PDF</strong><small>Optional exact maker data</small></span>
+          <span><strong>Manuals / PDF</strong><small>Upload or paste maker data</small></span>
         </button>
         <button type="button" onClick={() => setShowUnitConverter(true)}>
           <ArrowLeftRight className="h-5 w-5" />
@@ -296,6 +298,18 @@ export default function App() {
     </div>
   );
 
+  const renderManuals = () => (
+    <div className="ea-stack">
+      <PageHeading
+        icon={BookOpen}
+        eyebrow="Manuals / PDF"
+        title="Save only the pages you need."
+        text="Use PDF upload for maker limits and official procedures. Troubleshooting works without PDFs; manuals only make answers more exact."
+      />
+      <ManualVault />
+    </div>
+  );
+
   const renderSuite = () => (
     <div className="ea-stack">
       <PageHeading
@@ -350,6 +364,7 @@ export default function App() {
           <currentView.icon className="h-4 w-4" /> {currentView.label}
         </div>
         {activeView === "home" && renderHome()}
+        {activeView === "manuals" && renderManuals()}
         {activeView === "database" && renderDatabase()}
         {activeView === "ai" && renderAi()}
         {activeView === "suite" && renderSuite()}

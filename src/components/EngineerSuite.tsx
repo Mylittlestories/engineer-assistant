@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { extractPdfText } from "../utils/pdfText";
+import ManualVault from "./ManualVault";
 import {
   AlertTriangle,
   Archive,
@@ -399,48 +400,7 @@ export default function EngineerSuite() {
     }
   };
 
-  const renderManuals = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <SectionCard title="Upload or paste vessel manuals" icon={Upload}>
-        <div className="space-y-3">
-          <input type="file" accept=".pdf,.txt,.md,.csv,.json,.log,.xml,.html" onChange={(event) => handleManualFile(event.target.files?.[0])} className="block w-full text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:rounded-xl file:border-0 file:bg-teal-600 file:px-3 file:py-2 file:font-semibold file:text-white" />
-          {manualImportStatus && <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-teal-50 dark:bg-teal-950/20 p-3 text-xs text-slate-700 dark:text-slate-300">{manualImportStatus}</div>}
-          <div className="rounded-2xl border border-teal-200 dark:border-teal-900 bg-teal-50 dark:bg-teal-950/20 p-3 text-xs leading-relaxed text-teal-900 dark:text-teal-100/85">
-            PDF.js is bundled in the static GitHub Pages build, so PDF manuals can be parsed locally in the browser before being added to the offline vault.
-          </div>
-          <Field label="Manual title" value={manualTitle} onChange={setManualTitle} placeholder="MAN B&W ME-C operating manual" />
-          <Field label="Source / page / section" value={manualSource} onChange={setManualSource} placeholder="PDF name, page range, maker bulletin..." />
-          <Field label="Manual text / excerpt" value={manualContent} onChange={setManualContent} textarea placeholder="Paste text manually or upload a PDF/text file. PDF.js extracts text locally for static GitHub Pages." />
-          <button onClick={addManual} className="inline-flex items-center gap-2 rounded-2xl bg-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950"><Plus className="h-4 w-4" /> Add to vault</button>
-        </div>
-      </SectionCard>
-      <SectionCard title="Manual search and AI citations" icon={Search}>
-        <Field label="Search manuals" value={manualSearch} onChange={setManualSearch} placeholder="oil mist alarm bearing temperature" />
-        <div className="mt-4 space-y-3 max-h-[360px] overflow-y-auto pr-1">
-          {manualSnippets.length ? manualSnippets.map(snippet => (
-            <div key={`${snippet.documentId}-${snippet.excerpt.slice(0, 12)}`} className="rounded-2xl border border-slate-700 bg-[#11223b] p-3">
-              <div className="text-sm font-semibold text-cyan-100">{snippet.title}</div>
-              <div className="text-[11px] text-slate-400">{snippet.source}</div>
-              <p className="mt-2 text-xs leading-relaxed text-slate-300">{snippet.excerpt}</p>
-            </div>
-          )) : <p className="text-sm text-slate-400">Manual snippets matching AI questions are automatically sent as context to Browser Gemini/Desktop Gemini.</p>}
-        </div>
-      </SectionCard>
-      <SectionCard title={`Vault documents (${manuals.length})`} icon={Archive}>
-        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-          {manuals.map(doc => (
-            <div key={doc.id} className="flex items-start justify-between gap-3 rounded-2xl border border-slate-700 bg-[#11223b] p-3">
-              <div>
-                <div className="font-semibold text-slate-100">{doc.title}</div>
-                <div className="text-xs text-slate-400">{doc.source || "Local note"} • {Math.round(doc.content.length / 1000)}k chars</div>
-              </div>
-              <button onClick={() => persistManuals(manuals.filter(item => item.id !== doc.id))} className="rounded-xl p-1.5 text-slate-400 hover:bg-red-950 hover:text-red-200"><X className="h-4 w-4" /></button>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
-    </div>
-  );
+  const renderManuals = () => <ManualVault compact />;
 
   const renderTrees = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

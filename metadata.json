@@ -1,6 +1,6 @@
 {
   "name": "Engineer Assistant",
-  "description": "Mobile-first real troubleshooting assistant for marine engineers with offline expert diagnostic packs, static GitHub Pages Browser Gemini AI, PDF.js manual vault, desktop Gemini backend, guided troubleshooting, safety/PTW, logbook, PMS, spares, reports, emergency mode, training, and calculators.",
+  "description": "Refined mobile-first marine troubleshooting assistant with easy navigation, dedicated PDF manual vault, offline expert diagnostic packs, static GitHub Pages Browser Gemini AI, desktop Gemini backend, guided troubleshooting, safety/PTW, logbook, PMS, spares, reports, emergency mode, training, and calculators.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API",

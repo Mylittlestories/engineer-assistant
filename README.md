@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Professional Marine Engineering Toolkit</strong><br />
-  Mobile-first real troubleshooting, offline expert diagnostic packs, safety checklists, calculators, PDF.js manual vault, static GitHub Pages Browser Gemini AI, and desktop/server Gemini AI for shipboard use.
+  Refined mobile-first troubleshooting with easy Fix/Manuals/Faults/AI/More navigation, offline expert diagnostic packs, safety checklists, calculators, PDF.js manual vault, static GitHub Pages Browser Gemini AI, and desktop/server Gemini AI for shipboard use.
 </p>
 
 <p align="center">
@@ -24,7 +24,8 @@
   - **Browser Gemini mode for GitHub Pages:** the user enters their own Gemini API key in the app; the key is stored only in that browser's local storage.
   - **Desktop/server mode:** uses Gemini through the local Node API when a backend key is configured.
   - **Offline database mode:** no internet or key required; answers are matched from the onboard records.
-- Mobile-first real troubleshooting UI with a compact top bar, bottom navigation on phones, a primary Fix workflow, quick fault search, guided diagnostic plans, and safety-first fault cards.
+- Refined mobile-first UI with clear **Fix / Manuals / Faults / AI / More** navigation on web and desktop.
+- Dedicated Manuals page with a large PDF/text upload action, PDF.js local extraction, scan/protected-PDF warnings, browser storage handling, saved-section search, and delete controls.
 - Unit converter for pressure, temperature, viscosity, and torque.
 - LOTO and quick-reference panels.
 - PDF.js-powered manual/PDF text extraction in the static web app.
@@ -86,13 +87,13 @@ The release workflow builds downloadable desktop packages:
 2. Create and push a version tag, for example:
 
    ```bash
-   git tag v2.3.0
-   git push origin v2.3.0
+   git tag v2.4.0
+   git push origin v2.4.0
    ```
 
 3. The **Build Desktop Apps** workflow will build all platforms and attach the files to a GitHub Release.
 
-You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.3.0`.
+You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.4.0`.
 
 ## Local development
 
