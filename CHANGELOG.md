@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0
+
+### Changed
+- Rebuilt the static page and desktop app shell with a calmer Material Design layout.
+- First screen is now a focused dashboard with large action cards instead of showing database, AI, and tools all at once.
+- Added clean top navigation for Home, Faults, AI, and Engineer Suite.
+- Default theme is now calm light mode, with dark mode still available.
+
 ## 2.0.1
 
 ### Added

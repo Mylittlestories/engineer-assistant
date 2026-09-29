@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Professional Marine Engineering Toolkit</strong><br />
-  Offline-first troubleshooting, safety checklists, calculators, PDF.js manual vault, static GitHub Pages Browser Gemini AI, and desktop/server Gemini AI for shipboard use.
+  Calm Material Design offline-first troubleshooting, safety checklists, calculators, PDF.js manual vault, static GitHub Pages Browser Gemini AI, and desktop/server Gemini AI for shipboard use.
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@
   - **Browser Gemini mode for GitHub Pages:** the user enters their own Gemini API key in the app; the key is stored only in that browser's local storage.
   - **Desktop/server mode:** uses Gemini through the local Node API when a backend key is configured.
   - **Offline database mode:** no internet or key required; answers are matched from the onboard records.
-- Friendlier card-based UI with quick search, category filters, safety-first fault cards, and sticky AI assistant.
+- Calm Material Design UI with a simple home page, large action cards, quick search, category filters, safety-first fault cards, and sticky AI assistant.
 - Unit converter for pressure, temperature, viscosity, and torque.
 - LOTO and quick-reference panels.
 - PDF.js-powered manual/PDF text extraction in the static web app.
@@ -50,6 +50,9 @@ PDF.js is bundled into the static build, so PDF manuals can be uploaded and conv
 
 ## Live web app on GitHub Pages
 
+The first screen is now a calm Material Design dashboard with large actions for Faults, AI, Manual Vault / PDF.js, and Engineer Suite instead of showing every module at once.
+
+
 This repository includes a GitHub Actions workflow that builds and deploys the static PWA to GitHub Pages.
 
 ### Enable Pages once
@@ -73,7 +76,7 @@ The release workflow builds downloadable desktop packages:
 | --- | --- |
 | Windows | NSIS installer `.exe` and portable `.exe` |
 | Linux | `.AppImage` and `.deb` |
-| macOS | Universal `.dmg` |
+| macOS | Apple Silicon `.dmg` and Intel `.dmg` |
 
 ### Create a release from GitHub Actions
 
@@ -81,13 +84,13 @@ The release workflow builds downloadable desktop packages:
 2. Create and push a version tag, for example:
 
    ```bash
-   git tag v2.0.1
-   git push origin v2.0.1
+   git tag v2.1.0
+   git push origin v2.1.0
    ```
 
 3. The **Build Desktop Apps** workflow will build all platforms and attach the files to a GitHub Release.
 
-You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.0.1`.
+You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.1.0`.
 
 ## Local development
 
@@ -114,7 +117,8 @@ npm run start         # Start the production Node server from dist/
 npm run electron:dev  # Build and launch Electron locally
 npm run dist:win      # Build Windows installer + portable EXE
 npm run dist:linux    # Build Linux AppImage + DEB
-npm run dist:mac      # Build universal macOS DMG
+npm run dist:mac:arm64 # Build Apple Silicon macOS DMG
+npm run dist:mac:x64   # Build Intel macOS DMG
 npm run clean         # Remove generated artifacts
 ```
 

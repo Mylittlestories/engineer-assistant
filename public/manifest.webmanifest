@@ -1,14 +1,14 @@
 {
   "name": "Engineer Assistant",
   "short_name": "Engineer AI",
-  "description": "Offline-first marine engineering troubleshooting, PDF.js manual vault, calculators, and optional Browser Gemini AI for static GitHub Pages.",
+  "description": "Calm Material Design marine engineering assistant with PDF.js manual vault, troubleshooting, calculators, and Browser Gemini AI for static GitHub Pages.",
   "id": ".",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#06111f",
-  "theme_color": "#071524",
+  "background_color": "#eef5f6",
+  "theme_color": "#2f7d8c",
   "categories": [
     "education",
     "productivity",
