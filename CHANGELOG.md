@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.1
+
+### Added
+- PDF.js-powered PDF text extraction for the static GitHub Pages manual vault.
+- Prominent static web app launch link on the app home screen and at the top of the README.
+- README displays the app icon at the top.
+
+### Changed
+- Static/PWA cache bumped so GitHub Pages refreshes the updated app shell and icon assets.
+
 ## 2.0.0
 
 ### Added

@@ -23,10 +23,9 @@ import {
   Wrench,
   X
 } from "lucide-react";
+import { extractPdfText } from "../utils/pdfText";
 import {
   DEFAULT_SHIP_PROFILE,
-  MANUAL_STORAGE_KEY,
-  SHIP_PROFILE_STORAGE_KEY,
   buildBackup,
   calculateChemicalDoseLiters,
   calculateEngineSlipPercent,
@@ -282,6 +281,7 @@ export default function EngineerSuite() {
   const [manualSource, setManualSource] = useState("");
   const [manualContent, setManualContent] = useState("");
   const [manualSearch, setManualSearch] = useState("");
+  const [manualImportStatus, setManualImportStatus] = useState("");
   const [checkedSteps, setCheckedSteps] = useState<Record<string, boolean>>({});
   const [logbook, setLogbook] = useState<LogEntry[]>(() => loadList(STORAGE.logbook, []));
   const [logDraft, setLogDraft] = useState<LogEntry>({ id: "", timestamp: nowIso(), watch: "00-04", machinery: "", alarms: "", notes: "" });
@@ -320,10 +320,18 @@ export default function EngineerSuite() {
 
   const handleManualFile = async (file?: File) => {
     if (!file) return;
-    const text = await file.text();
-    setManualTitle(file.name.replace(/\.[^.]+$/, ""));
-    setManualSource(file.name);
-    setManualContent(text.slice(0, 160000));
+    setManualImportStatus(`Reading ${file.name}...`);
+
+    try {
+      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+      const text = isPdf ? await extractPdfText(file) : await file.text();
+      setManualTitle(file.name.replace(/\.[^.]+$/, ""));
+      setManualSource(isPdf ? `${file.name} (PDF.js extracted text)` : file.name);
+      setManualContent(text.slice(0, 180000));
+      setManualImportStatus(isPdf ? "PDF.js extraction complete. Review the text, then add it to the vault." : "File loaded. Review the text, then add it to the vault.");
+    } catch (error: any) {
+      setManualImportStatus(error?.message || "Could not read this file. Try exporting the PDF as text and paste it manually.");
+    }
   };
 
   const addLog = () => {
@@ -393,10 +401,14 @@ export default function EngineerSuite() {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <SectionCard title="Upload or paste vessel manuals" icon={Upload}>
         <div className="space-y-3">
-          <input type="file" accept=".txt,.md,.csv,.json,.log,.xml,.html,.pdf" onChange={(event) => handleManualFile(event.target.files?.[0])} className="block w-full text-sm text-slate-300 file:mr-3 file:rounded-xl file:border-0 file:bg-cyan-400 file:px-3 file:py-2 file:font-semibold file:text-slate-950" />
+          <input type="file" accept=".pdf,.txt,.md,.csv,.json,.log,.xml,.html" onChange={(event) => handleManualFile(event.target.files?.[0])} className="block w-full text-sm text-slate-300 file:mr-3 file:rounded-xl file:border-0 file:bg-cyan-400 file:px-3 file:py-2 file:font-semibold file:text-slate-950" />
+          {manualImportStatus && <div className="rounded-2xl border border-slate-700 bg-[#11223b] p-3 text-xs text-slate-300">{manualImportStatus}</div>}
+          <div className="rounded-2xl border border-cyan-800 bg-cyan-950/25 p-3 text-xs leading-relaxed text-cyan-100/85">
+            PDF.js is bundled in the static GitHub Pages build, so manuals can be parsed locally in the browser before being added to the offline vault.
+          </div>
           <Field label="Manual title" value={manualTitle} onChange={setManualTitle} placeholder="MAN B&W ME-C operating manual" />
           <Field label="Source / page / section" value={manualSource} onChange={setManualSource} placeholder="PDF name, page range, maker bulletin..." />
-          <Field label="Manual text / excerpt" value={manualContent} onChange={setManualContent} textarea placeholder="Paste relevant manual text. Browser-only PDF text extraction is limited; paste text or upload text exports for best AI citations." />
+          <Field label="Manual text / excerpt" value={manualContent} onChange={setManualContent} textarea placeholder="Paste text manually or upload a PDF/text file. PDF.js extracts text locally for static GitHub Pages." />
           <button onClick={addManual} className="inline-flex items-center gap-2 rounded-2xl bg-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950"><Plus className="h-4 w-4" /> Add to vault</button>
         </div>
       </SectionCard>

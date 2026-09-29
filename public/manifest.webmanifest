@@ -1,7 +1,7 @@
 {
   "name": "Engineer Assistant",
   "short_name": "Engineer AI",
-  "description": "Offline-first marine engineering troubleshooting, calculators, and optional Browser Gemini AI for static GitHub Pages.",
+  "description": "Offline-first marine engineering troubleshooting, PDF.js manual vault, calculators, and optional Browser Gemini AI for static GitHub Pages.",
   "id": ".",
   "start_url": ".",
   "scope": ".",

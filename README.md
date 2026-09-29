@@ -1,7 +1,19 @@
 # Engineer Assistant
 
-**Professional Marine Engineering Toolkit**  
-Offline-first troubleshooting, safety checklists, calculators, static GitHub Pages Browser Gemini AI, and desktop/server Gemini AI for shipboard use.
+<p align="center">
+  <img src="public/icons/icon-192.png" alt="Engineer Assistant app icon" width="128" height="128" />
+</p>
+
+<p align="center">
+  <strong>Professional Marine Engineering Toolkit</strong><br />
+  Offline-first troubleshooting, safety checklists, calculators, PDF.js manual vault, static GitHub Pages Browser Gemini AI, and desktop/server Gemini AI for shipboard use.
+</p>
+
+<p align="center">
+  <a href="https://mylittlestories.github.io/engineer-assistant/"><strong>Launch the Static Web App</strong></a>
+  ·
+  <a href="https://github.com/Mylittlestories/engineer-assistant/releases">Download Desktop Releases</a>
+</p>
 
 ## What it does
 
@@ -13,6 +25,7 @@ Offline-first troubleshooting, safety checklists, calculators, static GitHub Pag
 - Friendlier card-based UI with quick search, category filters, safety-first fault cards, and sticky AI assistant.
 - Unit converter for pressure, temperature, viscosity, and torque.
 - LOTO and quick-reference panels.
+- PDF.js-powered manual/PDF text extraction in the static web app.
 - PWA support for installable/offline browser use.
 - Electron desktop packaging for Windows, Linux, and macOS.
 - Proper app icons for web/PWA, Windows, macOS, Linux, and Android launcher assets.
@@ -30,6 +43,8 @@ GitHub Pages cannot run a private Node backend, so the static site cannot safely
 5. Ask questions normally.
 
 The key is saved only in that browser with `localStorage`. It is not committed to the repo and is not added to the build artifact.
+
+PDF.js is bundled into the static build, so PDF manuals can be uploaded and converted to local searchable text directly in the browser before being sent as AI context.
 
 > Security note: browser-side Gemini is convenient for personal/static use, but the key is still visible to that browser session. For a public production app, restrict the key by HTTP referrer in Google Cloud, monitor quotas, or use Firebase AI Logic / a private backend.
 
@@ -66,13 +81,13 @@ The release workflow builds downloadable desktop packages:
 2. Create and push a version tag, for example:
 
    ```bash
-   git tag v2.0.0
-   git push origin v2.0.0
+   git tag v2.0.1
+   git push origin v2.0.1
    ```
 
 3. The **Build Desktop Apps** workflow will build all platforms and attach the files to a GitHub Release.
 
-You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.0.0`.
+You can also run the workflow manually from **Actions → Build Desktop Apps** and enter a tag such as `v2.0.1`.
 
 ## Local development
 

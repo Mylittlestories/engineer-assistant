@@ -21,7 +21,8 @@ import {
 
 const RECORDS_STORAGE_KEY = "marine_engine_db_records";
 const THEME_STORAGE_KEY = "marine_theme";
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.0.1";
+const STATIC_PAGE_URL = "https://mylittlestories.github.io/engineer-assistant/";
 
 function loadStoredRecords(): TroubleshootingRecord[] {
   try {
@@ -152,6 +153,9 @@ export default function App() {
               </div>
 
               <div className="mt-5 flex flex-wrap gap-3">
+                <a href={STATIC_PAGE_URL} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-300 text-emerald-950 text-sm font-black hover:bg-emerald-200">
+                  <Download className="w-4 h-4" /> Open static web app
+                </a>
                 <button onClick={() => setShowTools(true)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#22d3ee] text-[#071524] text-sm font-bold hover:bg-cyan-300">
                   <Wrench className="w-4 h-4" /> Open engineer suite
                 </button>

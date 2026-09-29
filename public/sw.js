@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'engineer-assistant-pwa-v2.0.0';
+const CACHE_VERSION = 'engineer-assistant-pwa-v2.0.1';
 const APP_SHELL = [
   './',
   'index.html',
@@ -6,7 +6,8 @@ const APP_SHELL = [
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
-  'icons/apple-touch-icon.png'
+  'icons/apple-touch-icon.png',
+  'icons/icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
