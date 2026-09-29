@@ -76,7 +76,7 @@ The release workflow builds downloadable desktop packages:
 | --- | --- |
 | Windows | NSIS installer `.exe` and portable `.exe` |
 | Linux | `.AppImage` and `.deb` |
-| macOS | Apple Silicon `.dmg` and Intel `.dmg` |
+| macOS | Apple Silicon `.dmg` release artifact; Intel can be built with `npm run dist:mac:x64` on an Intel macOS runner |
 
 ### Create a release from GitHub Actions
 
